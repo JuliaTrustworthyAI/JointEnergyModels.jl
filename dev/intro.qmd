@@ -1,0 +1,144 @@
+
+# Joint Energy Models
+
+Adapted from https://github.com/jmtomczak/intro_dgm/blob/main/ebms/ebm_example.ipynb
+
+```{julia}
+Pkg.activate("docs")
+using Base: @kwdef
+using Flux
+using Flux.Data: DataLoader
+using Flux: onehotbatch, onecold, @epochs, @functor, logsumexp
+using Flux.Losses: logitcrossentropy
+using MLDatasets
+using Statistics
+```
+
+## Data
+
+```{julia}
+N = 1000
+Xraw, yraw = MNIST(split=:train)[:]
+Xraw = Xraw[:,:,1:N]
+yraw = yraw[1:N]
+```
+
+## Model
+
+```{julia}
+struct JointEnergyModel
+    chain::Chain
+end
+
+Flux.@functor JointEnergyModel
+
+function (jem::JointEnergyModel)(x)
+    jem.chain(x)
+end
+```
+
+
+
+```{julia}
+function classify(jem::JointEnergyModel, x)
+    ŷ = jem(x)
+    p̂ = softmax(ŷ)
+    return p̂
+end
+
+function class_loss(jem::JointEnergyModel, x, y)
+    ŷ = jem(x)
+    ℓ = logitcrossentropy(ŷ, y)
+    return ℓ
+end
+
+function gen_loss(jem::JointEnergyModel, x)
+    ŷ = jem(x)
+    x_sample = sample(jem; batch_size=size(x,2))
+    ŷ_sample = jem(x_sample)
+    ℓ = - (logsumexp(ŷ; dims=2) - logsumexp(ŷ_sample; dims=2))
+    return ℓ
+end
+
+function loss(jem::JointEnergyModel, x, y; agg=mean)
+    ℓ_clf = self.class_loss(x, y)
+    ℓ_gen = self.gen_loss(x, f_xy)
+    loss = agg(ℓ_clf .+ ℓ_gen)
+    return loss
+end
+```
+
+
+```{julia}
+function energy_gradient(jem::JointEnergyModel, x)
+    xᵢ = deepcopy(x)
+    ŷ = jem(xᵢ)
+    f(x) = sum(logsumexp(jem(x)))
+    gs = gradient(f, xᵢ)
+    return gs
+end
+
+function langevine_dynamics_step(jem::JointEnergyModel, xold, α, σ)
+    # Calculate gradient wrt xold
+    grad_energy = energy_gradient(jem, xold)
+    # Sample eta ~ Normal(0, alpha)
+    ε = randn(grad_energy, size(grad_energy)) * σ
+    # New sample
+    xnew = @.(xold + α * grad_energy + ε)
+
+    return xnew
+end
+
+function sample(jem::JointEnergyModel, x=nothing; batch_size=64, ld_steps::Int=20, α)
+    x_sample = rand(size(x,1), batch_size)
+    for i in 1:ld_steps
+        x_sample = langevine_dynamics_step(jem, x_sample, α)
+    end
+    return x_sample
+end
+
+```
+
+## Training
+
+```{julia}
+
+```
+
+## Experiments
+
+### Hyperparameters
+
+```{julia}
+D = 28  # input dimension
+K = 10 # output dimension
+M = 512  # the number of neurons
+
+sigma = 0.01 # the noise level
+
+alpha = 1.  # the step-size for SGLD
+ld_steps = 20  # the number of steps of SGLD
+
+lr = 1e-3  # learning rate
+num_epochs = 1000  # max. number of epochs
+max_patience = 20  # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
+```
+
+### Initializing the model
+
+```{julia}
+mlp = Chain(
+    Flux.flatten,
+    Dense(prod((D,D)), M, relu),
+    Dense(M, K)
+)
+
+# We initialize the full model
+jem = JointEnergyModel(mlp)
+```
+
+### Optimizer
+
+```{julia}
+opt = AdaMax(lr)
+```

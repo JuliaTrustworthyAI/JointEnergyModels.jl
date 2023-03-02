@@ -249,6 +249,7 @@ lr = 1e-3                   # learning rate
 num_epochs = 10             # max. number of epochs
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
 batchsize = Int(round(nobs/10))
+batchsize = 64
 ```
 
 ### Initializing the model

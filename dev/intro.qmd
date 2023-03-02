@@ -20,12 +20,19 @@ using Statistics
 ## Data
 
 ```{julia}
-nobs = 1000
+nobs = 1500
 n_digits = 8
+
 function _resize(x, size=(n_digits, n_digits))
     img_source = MLDatasets.convert2image(MNIST, x)
     img_rs = imresize(img_source, size)
     x = permutedims(convert(Array{Float32}, Gray.(img_rs)))
+    return x
+end
+
+function pre_process(x; noise::Float32=0.03f0)
+    ϵ = Float32.(randn(size(x)) * noise)
+    x = @.(2 * x - 1) .+ ϵ
     return x
 end
 
@@ -47,6 +54,8 @@ ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
 ## Validation Set:
 num_val = Int(round(nobs / 10))
 Xtrain, Xval = (Xtrain[:,:,1:(end-num_val)], Xtrain[:,:,(end-num_val+1):end])
+Xtrain = mapslices(x -> pre_process(x), Xtrain, dims=(1,2)) 
+Xval = mapslices(x -> pre_process(x, noise=0.0f0), Xval, dims=(1,2)) 
 ytrain, yval = (ytrain[:, 1:(end-num_val)], ytrain[:, (end-num_val+1):end])
 ```
 
@@ -60,7 +69,7 @@ struct JointEnergyModel
     ld_steps::Int
 end
 
-function JointEnergyModel(chain::Chain; α::Real=1.0, σ::Real=0.01, ld_steps::Int=20)
+function JointEnergyModel(chain::Chain; α::Float32=1.0f0, σ::Float32=0.01f0, ld_steps::Int=20)
     return JointEnergyModel(chain, α, σ, ld_steps)
 end
 
@@ -72,12 +81,6 @@ end
 ```
 
 ```{julia}
-function classify(jem::JointEnergyModel, x)
-    ŷ = jem(x)
-    p̂ = softmax(ŷ)
-    return p̂
-end
-
 function class_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
     ℓ = logitcrossentropy(ŷ, y; agg=x -> x)
@@ -88,7 +91,7 @@ function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
     xsample = sample(jem, x)
     ŷsample = jem(xsample)
-    ℓ = - (logsumexp(ŷ; dims=1) - logsumexp(ŷsample; dims=1))
+    ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
     return ℓ
 end
 
@@ -104,21 +107,21 @@ end
 ```{julia}
 function energy_gradient(jem::JointEnergyModel, x)
     xᵢ = deepcopy(x)
-    ŷ = jem(xᵢ)
-    f(x) = sum(logsumexp(jem(x)))
-    gs = gradient(f, xᵢ)
+    # f(x) = sum(logsumexp(jem(x); dims=1))
+    f(x) = sum(map(y -> logsumexp(y), eachcol(jem(x))))
+    gs = gradient(f, xᵢ)[1]
     return gs
 end
 
-function langevine_dynamics_step(jem::JointEnergyModel, xold)
+function langevine_dynamics_step(jem::JointEnergyModel, x)
     # Calculate gradient wrt xold
-    grad_energy = energy_gradient(jem, xold)[1]
+    grad_energy = energy_gradient(jem, x)
     # Sample eta ~ Normal(0, alpha)
-    ε = Float32.(randn(size(grad_energy)...) * jem.σ)
+    ε = Float32.(randn(size(grad_energy)...) .* jem.σ)
     # New sample
-    xnew = @.(xold + jem.α * grad_energy + ε)
+    x -= jem.α * grad_energy .+ ε
 
-    return xnew
+    return x
 end
 
 function sample(jem::JointEnergyModel, x)
@@ -218,7 +221,7 @@ function training(
                 @info "Training loss in epoch $epoch: $ℓ"
                 @info "Training accuracy in epoch $epoch: $acc"
             else
-                @info "Validation training_losses/accuracy in epoch $epoch:"
+                @info "Validation losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")
                 println("Generative: $ℓ_gen")
                 println("Total: $ℓ")
@@ -244,11 +247,10 @@ end
 ```{julia}
 D = n_digits                # input dimension
 K = 10                      # output dimension
-M = 32                      # the number of neurons
-lr = 1e-3                   # learning rate
-num_epochs = 10             # max. number of epochs
+M = 32                   
+lr = 1e-2                   # learning rate
+num_epochs = 10            
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
-batchsize = Int(round(nobs/10))
 batchsize = 64
 ```
 
@@ -257,7 +259,9 @@ batchsize = 64
 ```{julia}
 mlp = Chain(
     Flux.flatten,
-    Dense(prod((D,D)), M, relu),
+    Dense(prod((D,D)), M, elu),
+    # Dense(M, M, elu),
+    # Dense(M, M, elu),
     Dense(M, K)
 )
 

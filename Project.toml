@@ -3,6 +3,9 @@ uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
 authors = ["Patrick Altmeyer"]
 version = "0.1.0"
 
+[deps]
+PkgTemplates = "14b8a8f1-9102-5b29-a752-f990bacb7fe1"
+
 [compat]
 julia = "1.7"
 

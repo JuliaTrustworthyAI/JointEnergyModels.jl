@@ -133,18 +133,25 @@ end
 ## Evaluation and Training
 
 ```{julia}
+function accuracy(model::JointEnergyModel, x, y; agg=mean)
+    ŷ = jem(x)
+    mean(onecold(ŷ) .== onecold(y))
+end
+
 function evaluation(model::JointEnergyModel, val_set::DataLoader)
     ℓ = 0.0
     ℓ_clf = 0.0
     ℓ_gen = 0.0
+    acc = 0.0
     num = 0
     for (x, y) in val_set
-        ℓ_clf += sum(class_loss(jem, x, y))
-        ℓ_gen += sum(gen_loss(jem, x))
-        ℓ += loss(jem, x, y)
+        ℓ_clf += sum(class_loss(model, x, y))
+        ℓ_gen += sum(gen_loss(model, x))
+        ℓ += loss(model, x, y)
+        acc += accuracy(model, x, y)
         num += size(x)[end]
     end
-    return ℓ / num, ℓ_clf / num, ℓ_gen / num
+    return ℓ / num, ℓ_clf / num, ℓ_gen / num, acc / length(val_set)
 end
 
 function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 10)
@@ -173,7 +180,7 @@ function training(
 )
     training_log = []
     for epoch in 1:num_epochs
-        losses = Float32[]
+        training_losses = Float32[]
 
         # Training:
         for (i, data) in enumerate(train_set)
@@ -185,7 +192,7 @@ function training(
             end
 
             # Save the loss from the forward pass. (Done outside of gradient.)
-            push!(losses, val)
+            push!(training_losses, val)
 
             # Detect loss of Inf or NaN. Print a warning, and then skip update!
             if !isfinite(val)
@@ -198,21 +205,24 @@ function training(
 
         # Evluation:
         if !isnothing(val_set)
-            ℓ, ℓ_clf, ℓ_gen = evaluation(model, val_set)
-            push!(training_log, (; losses, ℓ, ℓ_clf, ℓ_gen))
+            ℓ, ℓ_clf, ℓ_gen, acc = evaluation(model, val_set)
+            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, acc, training_losses))
         else
-            ℓ, _, _ = evaluation(model, train_set)
+            ℓ, _, _, acc = evaluation(model, train_set)
+            push!(training_log, (; ℓ, acc, training_losses))
         end
 
         # Verbosity:
         if (verbosity > 0) && (epoch % round(num_epochs / verbosity) == 0)
             if isnothing(val_set)
                 @info "Training loss in epoch $epoch: $ℓ"
+                @info "Training accuracy in epoch $epoch: $acc"
             else
-                @info "Validation losses in epoch $epoch:"
+                @info "Validation training_losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")
                 println("Generative: $ℓ_gen")
                 println("Total: $ℓ")
+                println("Accuracy: $acc")
             end
         end
 
@@ -222,6 +232,8 @@ function training(
         es() && break
 
     end
+
+    return training_log
 end
 ```
 
@@ -234,9 +246,9 @@ D = n_digits                # input dimension
 K = 10                      # output dimension
 M = 32                      # the number of neurons
 lr = 1e-3                   # learning rate
-num_epochs = 50             # max. number of epochs
+num_epochs = 10             # max. number of epochs
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
-batchsize = 100
+batchsize = Int(round(nobs/10))
 ```
 
 ### Initializing the model
@@ -270,6 +282,6 @@ training(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
 ### The final evaluation
 
 ```{julia}
-ℓ_test, ℓ_clf_test, ℓ_gen_test = evaluation(jem, test_set)
+ℓ_test, ℓ_clf_test, ℓ_gen_test, acc_test = evaluation(jem, test_set)
 ```
 

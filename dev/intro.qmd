@@ -10,7 +10,10 @@ using Flux
 using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold, @epochs, @functor, logsumexp
 using Flux.Losses: logitcrossentropy
+using Images
 using MLDatasets
+using Plots
+using Plots.PlotMeasures
 using Statistics
 ```
 
@@ -18,14 +21,25 @@ using Statistics
 
 ```{julia}
 nobs = 1000
+n_digits = 8
+function _resize(x, size=(n_digits, n_digits))
+    img_source = MLDatasets.convert2image(MNIST, x)
+    img_rs = imresize(img_source, size)
+    x = permutedims(convert(Array{Float32}, Gray.(img_rs)))
+    return x
+end
 
 # Train Set:
 Xtrain, ytrain = MNIST(split=:train)[:]
 Xtrain = Xtrain[:,:,1:nobs]
+Xtrain = mapslices(x -> _resize(x), Xtrain, dims=(1,2)) 
 ytrain = ytrain[1:nobs] 
 
 # Test Set:
 Xtest, ytest = MNIST(split=:test)[:]
+Xtest = Xtest[:,:,1:nobs]
+Xtest = mapslices(x -> _resize(x), Xtest, dims=(1,2)) 
+ytest = ytest[1:nobs] 
 
 ## One-hot-encode the labels
 ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
@@ -132,6 +146,23 @@ function evaluation(model::JointEnergyModel, val_set::DataLoader)
     end
     return ℓ / num, ℓ_clf / num, ℓ_gen / num
 end
+
+function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 10)
+    x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
+    num_x = Int(round(ceil(sqrt(n))))
+    num_y = Int(round(floor(sqrt(n))))
+    plot_data = [heatmap(rotl90(x[:,:,rand(1:size(x)[end])]), axis=nothing, cb=false) for i in 1:n]
+    plot(plot_data..., layout=(num_x, num_y), size=(num_x*img_size, num_y*img_size), margin=(round(0.05*img_size), :px))
+end
+
+function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 10)
+    x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
+    x = sample(model, x)
+    num_x = Int(round(ceil(sqrt(n))))
+    num_y = Int(round(floor(sqrt(n))))
+    plot_data = [heatmap(rotl90(x[:,:,rand(1:size(x)[end])]), axis=nothing, cb=false) for i in 1:n]
+    plot(plot_data..., layout=(num_x, num_y), size=(num_x*img_size, num_y*img_size), margin=(round(0.05*img_size), :px))
+end
 ```
 
 ```{julia}
@@ -175,12 +206,20 @@ function training(
 
         # Verbosity:
         if (verbosity > 0) && (epoch % round(num_epochs / verbosity) == 0)
-            loss_type = isnothing(val_set) ? "Training" : "Validation"
-            @info "$loss_type loss in epoch $epoch: $ℓ"
+            if isnothing(val_set)
+                @info "Training loss in epoch $epoch: $ℓ"
+            else
+                @info "Validation losses in epoch $epoch:"
+                println("Classification: $ℓ_clf")
+                println("Generative: $ℓ_gen")
+                println("Total: $ℓ")
+            end
         end
 
         # Early Stopping:
-        # Flux.early_stopping(ℓ, max_patience) && break
+        _loss() = ℓ
+        es = Flux.early_stopping(_loss, max_patience)
+        es() && break
 
     end
 end
@@ -191,13 +230,13 @@ end
 ### Hyperparameters
 
 ```{julia}
-D = 28                      # input dimension
+D = n_digits                # input dimension
 K = 10                      # output dimension
-M = 512                     # the number of neurons
+M = 32                      # the number of neurons
 lr = 1e-3                   # learning rate
-num_epochs = 1000           # max. number of epochs
+num_epochs = 50             # max. number of epochs
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
-batchsize = 64              # mini-batch size
+batchsize = 100
 ```
 
 ### Initializing the model
@@ -217,7 +256,7 @@ jem = JointEnergyModel(mlp)
 
 ```{julia}
 # Initialise 
-opt = AdaMax(lr)
+opt = Adam(lr)
 opt_state = Flux.setup(opt, jem)
 train_set = DataLoader((Xtrain, ytrain); batchsize=batchsize, shuffle=true)
 val_set = DataLoader((Xval, yval); batchsize=batchsize, shuffle=false)
@@ -228,4 +267,9 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 training(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
 ```
 
+### The final evaluation
+
+```{julia}
+ℓ_test, ℓ_clf_test, ℓ_gen_test = evaluation(jem, test_set)
+```
 

@@ -69,7 +69,7 @@ struct JointEnergyModel
     ld_steps::Int
 end
 
-function JointEnergyModel(chain::Chain; α::Real=1.0, σ::Real=0.01, ld_steps::Int=20)
+function JointEnergyModel(chain::Chain; α::Float32=1.0f0, σ::Float32=0.01f0, ld_steps::Int=20)
     return JointEnergyModel(chain, α, σ, ld_steps)
 end
 
@@ -91,7 +91,7 @@ function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
     xsample = sample(jem, x)
     ŷsample = jem(xsample)
-    ℓ = - (logsumexp(ŷ; dims=1) - logsumexp(ŷsample; dims=1))
+    ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
     return ℓ
 end
 
@@ -113,15 +113,15 @@ function energy_gradient(jem::JointEnergyModel, x)
     return gs
 end
 
-function langevine_dynamics_step(jem::JointEnergyModel, xold)
+function langevine_dynamics_step(jem::JointEnergyModel, x)
     # Calculate gradient wrt xold
-    grad_energy = energy_gradient(jem, xold)
+    grad_energy = energy_gradient(jem, x)
     # Sample eta ~ Normal(0, alpha)
     ε = Float32.(randn(size(grad_energy)...) .* jem.σ)
     # New sample
-    xnew = @.(xold + jem.α * grad_energy + ε)
+    x -= jem.α * grad_energy .+ ε
 
-    return xnew
+    return x
 end
 
 function sample(jem::JointEnergyModel, x)
@@ -247,8 +247,8 @@ end
 ```{julia}
 D = n_digits                # input dimension
 K = 10                      # output dimension
-M = 512                     # hidden neuruns
-lr = 1e-3                   # learning rate
+M = 32                   
+lr = 1e-2                   # learning rate
 num_epochs = 10            
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
 batchsize = 64
@@ -260,8 +260,8 @@ batchsize = 64
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    Dense(M, M, elu),
-    Dense(M, M, elu),
+    # Dense(M, M, elu),
+    # Dense(M, M, elu),
     Dense(M, K)
 )
 

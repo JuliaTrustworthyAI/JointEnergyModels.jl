@@ -20,13 +20,15 @@ using Statistics
 ## Data
 
 ```{julia}
-nobs = 1500
-n_digits = 8
+nobs = 10000
+n_digits = 28
 
 function _resize(x, size=(n_digits, n_digits))
-    img_source = MLDatasets.convert2image(MNIST, x)
-    img_rs = imresize(img_source, size)
-    x = permutedims(convert(Array{Float32}, Gray.(img_rs)))
+    if n_digits != 28
+        img_source = MLDatasets.convert2image(MNIST, x)
+        img_rs = imresize(img_source, size)
+        x = permutedims(convert(Array{Float32}, Gray.(img_rs)))
+    end
     return x
 end
 
@@ -115,14 +117,17 @@ end
 
 function langevine_dynamics_step(
     jem::JointEnergyModel, x, t::Int; 
-    a::Float32=1.0f0, b::Float32=1.0f0, γ::Float32=0.5f0
+    a::Float32=1.0f0, b::Float32=1.0f0, γ::Float32=0.9f0
 )
     # Calculate gradient wrt xold
     grad_energy = energy_gradient(jem, x)
 
-    ϵ = a*(b + t)^-γ
-    η = Float32.(ϵ.*randn(size(grad_energy)))
-    Δx = ϵ / 2 * grad_energy + η
+    # ϵ = a*(b + t)^-γ
+    # η = Float32.(ϵ.*randn(size(grad_energy)))
+    # Δx = ϵ / 2 * grad_energy + η
+
+    η = Float32.(jem.σ .* randn(size(grad_energy)))
+    Δx = jem.α * grad_energy + η
 
     # New sample
     x -= Δx
@@ -163,7 +168,7 @@ function evaluation(model::JointEnergyModel, val_set::DataLoader)
     return ℓ / num, ℓ_clf / num, ℓ_gen / num, acc / length(val_set)
 end
 
-function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 10)
+function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 5)
     x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
     num_x = Int(round(ceil(sqrt(n))))
     num_y = Int(round(floor(sqrt(n))))
@@ -171,12 +176,12 @@ function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_si
     plot(plot_data..., layout=(num_x, num_y), size=(num_x*img_size, num_y*img_size), margin=(round(0.05*img_size), :px))
 end
 
-function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 10)
+function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 5)
     x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
-    x = sample(model, x)
+    x = sample(model, x[:,:,rand(1:size(x)[end], n)])
     num_x = Int(round(ceil(sqrt(n))))
     num_y = Int(round(floor(sqrt(n))))
-    plot_data = [heatmap(rotl90(x[:,:,rand(1:size(x)[end])]), axis=nothing, cb=false) for i in 1:n]
+    plot_data = [heatmap(rotl90(x[:,:,i]), axis=nothing, cb=false) for i in 1:n]
     plot(plot_data..., layout=(num_x, num_y), size=(num_x*img_size, num_y*img_size), margin=(round(0.05*img_size), :px))
 end
 ```
@@ -251,13 +256,13 @@ end
 ### Hyperparameters
 
 ```{julia}
-D = n_digits                # input dimension
-K = 10                      # output dimension
-M = 32              
-lr = 1e-3                  # learning rate
-num_epochs = 10            
-max_patience = 3            # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
-batchsize = 100
+D = n_digits               
+K = 10                      
+M = 512          
+lr = 1e-4                  
+num_epochs = 50
+max_patience = 5            
+batchsize = Int(round(nobs/10))
 ```
 
 ### Initializing the model
@@ -266,8 +271,8 @@ batchsize = 100
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    # Dense(M, M, elu),
-    # Dense(M, M, elu),
+    Dense(M, M, elu),
+    Dense(M, M, elu),
     Dense(M, K)
 )
 
@@ -287,7 +292,7 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```
 
 ```{julia}
-training(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
+logs = training(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
 ```
 
 ### The final evaluation

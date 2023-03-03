@@ -1,5 +1,7 @@
 module JointEnergyModels
 
-# Write your package code here.
+abstract type AbstractSampler end
+
+include("Samplers.jl")
 
 end

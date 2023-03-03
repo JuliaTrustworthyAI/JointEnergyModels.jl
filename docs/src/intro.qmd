@@ -91,7 +91,7 @@ function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
     xsample = sample(jem, x)
     ŷsample = jem(xsample)
-    ℓ = -(logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1))
+    ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
     return ℓ
 end
 
@@ -113,13 +113,19 @@ function energy_gradient(jem::JointEnergyModel, x)
     return gs
 end
 
-function langevine_dynamics_step(jem::JointEnergyModel, x)
+function langevine_dynamics_step(
+    jem::JointEnergyModel, x, t::Int; 
+    a::Float32=1.0f0, b::Float32=1.0f0, γ::Float32=0.5f0
+)
     # Calculate gradient wrt xold
     grad_energy = energy_gradient(jem, x)
-    # Sample eta ~ Normal(0, alpha)
-    ε = Float32.(randn(size(grad_energy)...) .* jem.σ)
+
+    ϵ = a*(b + t)^-γ
+    η = Float32.(ϵ.*randn(size(grad_energy)))
+    Δx = ϵ / 2 * grad_energy + η
+
     # New sample
-    x += jem.α * grad_energy .+ ε
+    x -= Δx
 
     return x
 end
@@ -127,7 +133,7 @@ end
 function sample(jem::JointEnergyModel, x)
     xsample = Float32.(rand(size(x)...)) .* 2 .- 1
     for i in 1:jem.ld_steps
-        xsample = langevine_dynamics_step(jem, xsample)
+        xsample = langevine_dynamics_step(jem, xsample, i)
     end
     return xsample
 end
@@ -247,10 +253,10 @@ end
 ```{julia}
 D = n_digits                # input dimension
 K = 10                      # output dimension
-M = 512                   
-lr = 1e-3                   # learning rate
+M = 32              
+lr = 1e-3                  # learning rate
 num_epochs = 10            
-max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
+max_patience = 3            # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
 batchsize = 100
 ```
 
@@ -260,8 +266,8 @@ batchsize = 100
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    Dense(M, M, elu),
-    Dense(M, M, elu),
+    # Dense(M, M, elu),
+    # Dense(M, M, elu),
     Dense(M, K)
 )
 

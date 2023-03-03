@@ -91,7 +91,7 @@ function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
     xsample = sample(jem, x)
     ŷsample = jem(xsample)
-    ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
+    ℓ = -(logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1))
     return ℓ
 end
 
@@ -119,13 +119,13 @@ function langevine_dynamics_step(jem::JointEnergyModel, x)
     # Sample eta ~ Normal(0, alpha)
     ε = Float32.(randn(size(grad_energy)...) .* jem.σ)
     # New sample
-    x -= jem.α * grad_energy .+ ε
+    x += jem.α * grad_energy .+ ε
 
     return x
 end
 
 function sample(jem::JointEnergyModel, x)
-    xsample = Float32.(rand(size(x)...))
+    xsample = Float32.(rand(size(x)...)) .* 2 .- 1
     for i in 1:jem.ld_steps
         xsample = langevine_dynamics_step(jem, xsample)
     end
@@ -247,11 +247,11 @@ end
 ```{julia}
 D = n_digits                # input dimension
 K = 10                      # output dimension
-M = 32                   
-lr = 1e-2                   # learning rate
+M = 512                   
+lr = 1e-3                   # learning rate
 num_epochs = 10            
 max_patience = 20           # an early stopping is used, if training doesn't improve for longer than 20 epochs, it is stopped
-batchsize = 64
+batchsize = 100
 ```
 
 ### Initializing the model
@@ -260,8 +260,8 @@ batchsize = 64
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    # Dense(M, M, elu),
-    # Dense(M, M, elu),
+    Dense(M, M, elu),
+    Dense(M, M, elu),
     Dense(M, K)
 )
 

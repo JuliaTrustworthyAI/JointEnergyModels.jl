@@ -1,6 +1,8 @@
 module JointEnergyModels
 
-abstract type AbstractSampler end
+using Flux
+
+abstract type AbstractSampler <: Flux.Optimise.AbstractOptimiser end
 
 include("Samplers.jl")
 

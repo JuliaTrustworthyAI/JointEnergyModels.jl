@@ -93,7 +93,7 @@ function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
     xsample = sample(jem, x)
     ŷsample = jem(xsample)
-    ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
+    ℓ = -(logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1))
     return ℓ
 end
 
@@ -130,7 +130,7 @@ function langevine_dynamics_step(
     Δx = jem.α * grad_energy + η
 
     # New sample
-    x -= Δx
+    x += Δx
 
     return x
 end

@@ -1,0 +1,21 @@
+# Samplers
+
+```{julia}
+#| echo: false
+include("docs/setup_docs.jl")
+eval(setup_docs)
+```
+
+
+```{julia}
+using CounterfactualExplanations.Data: load_mnist
+using CounterfactualExplanations.Models: load_mnist_mlp, load_mnist_ensemble
+```
+
+
+```{julia}
+X, y = load_mnist().X, load_mnist().y
+mlp = load_mnist_mlp().model
+ens = load_mnist_ensemble().model
+```
+

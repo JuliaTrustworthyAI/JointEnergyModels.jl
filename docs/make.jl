@@ -1,7 +1,9 @@
 using JointEnergyModels
 using Documenter
 
-DocMeta.setdocmeta!(JointEnergyModels, :DocTestSetup, :(using JointEnergyModels); recursive=true)
+include("setup_docs.jl")
+
+DocMeta.setdocmeta!(JointEnergyModels, :DocTestSetup, :(setup_docs); recursive=true)
 
 makedocs(;
     modules=[JointEnergyModels],
@@ -12,11 +14,23 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://pat-alt.github.io/JointEnergyModels.jl",
         edit_link="main",
-        assets=String[],
+        assets=String[]
     ),
     pages=[
-        "Home" => "index.md",
-    ],
+        "🏠 Home" => "index.md",
+        "🫣 Tutorials" => [
+            "Overview" => "tutorials/index.md",
+        ],
+        "🤓 Explanation" => [
+            "Overview" => "explanation/index.md",
+        ],
+        "🫡 How-To ..." => [
+            "Overview" => "how_to_guides/index.md",
+        ],
+        "🧐 Reference" => "reference.md",
+        "🛠 Contribute" => "contribute.md",
+        "📚 Additional Resources" => "assets/resources.md",
+    ]
 )
 
 deploydocs(;

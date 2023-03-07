@@ -4,6 +4,8 @@ using Flux
 using ..JointEnergyModels
 using ..JointEnergyModels: AbstractOptimiser
 
+export SGLD, ImproperSGLD
+
 @doc raw"""
     SGLD(a::Real=1.0, b::Real=1.0, γ::Real=0.5)
 
@@ -21,10 +23,10 @@ struct SGLD <: AbstractOptimiser
     gamma::Float64
     state::IdDict{Any,Any}
 end
-SGLD(a::Real=1.0, b::Real=1.0, γ::Real=0.5) = SGLD(a, b, γ, IdDict())
+SGLD(a::Real=2.0, b::Real=1.0, γ::Real=0.5) = SGLD(a, b, γ, IdDict())
 SGLD(a::Real, b::Real, state::IdDict) = SGLD(a, b, EPS, state)
 
-function apply!(o::SGLD, x, Δ)
+function Flux.Optimise.apply!(o::SGLD, x, Δ)
     a, b, γ = o.a, o.b, o.gamma
 
     εt, t = get!(o.state, x) do
@@ -32,7 +34,7 @@ function apply!(o::SGLD, x, Δ)
     end::Tuple{typeof(x),Base.RefValue{Int}}
 
     @. εt = a * (b + t)^-γ
-    @. ηt = εt * randn(size(Δ))
+    ηt = εt .* randn(size(Δ))
     @. Δ = 0.5 * εt * Δ + ηt
 
     t[] += 1
@@ -57,10 +59,10 @@ struct ImproperSGLD <: AbstractOptimiser
 end
 ImproperSGLD(α::Real=2.0, σ::Real=0.01) = ImproperSGLD(α, σ)
 
-function apply!(o::ImproperSGLD, x, Δ)
+function Flux.Optimise.apply!(o::ImproperSGLD, x, Δ)
     α, σ = o.alpha, o.sigma
 
-    @. ηt = σ * randn(size(Δ))
+    ηt = σ .* randn(size(Δ))
     @. Δ = 0.5 * α * Δ + ηt
 
     return Δ

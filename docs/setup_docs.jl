@@ -3,12 +3,14 @@ setup_docs = quote
     using Pkg
     Pkg.activate("docs")
 
-    using JointEnergyModels
+
+    using Distributions
     using Flux
     using Flux.Data: DataLoader
     using Flux: onehotbatch, onecold, @epochs, @functor, logsumexp
     using Flux.Losses: logitcrossentropy
     using Images
+    using JointEnergyModels
     using MLDatasets
     using Plots
     using Plots.PlotMeasures

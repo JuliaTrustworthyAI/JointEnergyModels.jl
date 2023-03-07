@@ -15,7 +15,51 @@ using CounterfactualExplanations.Models: load_mnist_mlp, load_mnist_ensemble
 
 ```{julia}
 X, y = load_mnist().X, load_mnist().y
+nclasses = size(y, 1)
 mlp = load_mnist_mlp().model
+f_mlp(x) = mlp(x)
 ens = load_mnist_ensemble().model
+f_ens(x) = sum(map(mlp -> mlp(x), ens))/length(ens)
 ```
 
+
+```{julia}
+sampler = ConditionalSampler(Uniform(-1,1), Categorical(ones(nclasses) ./ nclasses))
+opt = ImproperSGLD()
+```
+
+
+```{julia}
+n_iter = 20
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = sampler(f_mlp, opt, size(X,1), neach; y=i, niter=n_iter)
+    plts_i = []
+    for j in 1:size(x, 2)
+        xj = reshape(x[:,j], 28, 28)
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
+```
+
+```{julia}
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = sampler(f_ens, opt, size(X,1), neach; y=i, niter=n_iter)
+    plts_i = []
+    for j in 1:size(x, 2)
+        xj = reshape(x[:,j], 28, 28)
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
+```

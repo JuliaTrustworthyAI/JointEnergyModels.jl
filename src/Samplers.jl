@@ -6,32 +6,43 @@ using Flux.Optimise: apply!
 using ..JointEnergyModels
 using ..JointEnergyModels: AbstractSampler
 
+export ConditionalSampler, UnconditionalSampler
+
 @doc raw"""
     ConditionalSampler <: AbstractSampler
 
 Generates conditional samples: $x \sim p(x|y).$
 """
 struct ConditionalSampler <: AbstractSampler
-    𝒟ₓ::Distribution
-    y::Union{Int,Distribution}
-    niter::Int
+    𝒟x::Distribution
+    𝒟y::Distribution
 end
-ConditionalSampler(𝒟ₓ::Distribution, y::Union{Int,Distribution}, niter::Int) = ConditionalSampler(𝒟ₓ, y, niter)
+ConditionalSampler(; 𝒟x::Distribution, 𝒟y::Distribution) = ConditionalSampler(𝒟x, 𝒟y)
 
-function (sampler::ConditionalSampler)(model, rule::JointEnergyModels.Optimiser, dims::Dims)
+function (sampler::ConditionalSampler)(
+    model, rule::JointEnergyModels.AbstractOptimiser, input_dim::Int, batchsize::Int=1; 
+    y::Union{Nothing, Int}=nothing, niter::Int=100, as_matrix::Bool=true
+)
 
     # Setup:
-    x = rand(sampler.𝒟ₓ, dims)
-    if typeof(y) <: Distribution
+    x = map(i -> Float32.(rand(sampler.𝒟x, input_dim, 1)), 1:batchsize)
+    if isnothing(y)
         y = rand(sampler.y)
     end
     f(x) = energy(model, x, y)
 
     # Training:
-    for i in 1:sampler.niter
-        Δ = gradient(f, x)[1]
-        Δ = apply!(rule, x, Δ)
-        x -= Δ
+    x = map(x) do _x
+        for i in 1:niter
+            Δ = gradient(f, _x)[1]
+            Δ = apply!(rule, _x, Δ)
+            _x -= Δ
+        end
+        return _x
+    end
+
+    if as_matrix
+        x = reduce(hcat, x)
     end
 
     return x
@@ -44,22 +55,31 @@ end
 Generates unconditional samples: $x \sim p(x).$
 """
 struct UnconditionalSampler <: AbstractSampler
-    𝒟ₓ::Distribution
-    niter::Int
+    𝒟x::Distribution
 end
-UnconditionalSampler(𝒟ₓ::Distribution, niter::Int) = UnconditionalSampler(𝒟ₓ, niter)
+UnconditionalSampler(; 𝒟x::Distribution) = UnconditionalSampler(𝒟x)
 
-function (sampler::UnconditionalSampler)(model, rule::JointEnergyModels.Optimiser, dims::Dims)
+function (sampler::UnconditionalSampler)(
+    model, rule::JointEnergyModels.AbstractOptimiser, input_dim::Int, batchsize::Int=1;
+    niter::Int=100, as_matrix::Bool=true
+)
 
     # Setup:
-    x = rand(sampler.𝒟ₓ, dims)
+    x = map(i -> Float32.(rand(sampler.𝒟x, input_dim, 1)), 1:batchsize)
     f(x) = energy(model, x)
 
     # Training:
-    for i in 1:sampler.niter
-        Δ = gradient(f, x)[1]
-        Δ = apply!(rule, x, Δ)
-        x -= Δ
+    x = map(x) do _x
+        for i in 1:niter
+            Δ = gradient(f, _x)[1]
+            Δ = apply!(rule, _x, Δ)
+            _x -= Δ
+        end
+        return _x
+    end
+
+    if as_matrix
+        x = reduce(hcat, x)
     end
 
     return x

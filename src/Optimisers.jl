@@ -23,8 +23,7 @@ struct SGLD <: AbstractOptimiser
     gamma::Float64
     state::IdDict{Any,Any}
 end
-SGLD(a::Real=2.0, b::Real=1.0, γ::Real=0.5) = SGLD(a, b, γ, IdDict())
-SGLD(a::Real, b::Real, state::IdDict) = SGLD(a, b, EPS, state)
+SGLD(a::Real=2.0, b::Real=1.0, γ::Real=0.9) = SGLD(a, b, γ, IdDict())
 
 function Flux.Optimise.apply!(o::SGLD, x, Δ)
     a, b, γ = o.a, o.b, o.gamma

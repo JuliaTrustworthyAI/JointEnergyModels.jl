@@ -1,20 +1,10 @@
 
 # Joint Energy Models
 
-Adapted from https://github.com/jmtomczak/intro_dgm/blob/main/ebms/ebm_example.ipynb
-
 ```{julia}
-Pkg.activate("docs")
-using Base: @kwdef
-using Flux
-using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold, @epochs, @functor, logsumexp
-using Flux.Losses: logitcrossentropy
-using Images
-using MLDatasets
-using Plots
-using Plots.PlotMeasures
-using Statistics
+#| echo: false
+include("docs/setup_docs.jl")
+eval(setup_docs)
 ```
 
 ## Data
@@ -63,87 +53,6 @@ ytrain, yval = (ytrain[:, 1:(end-num_val)], ytrain[:, (end-num_val+1):end])
 
 ## `JointEnergyModel`
 
-```{julia}
-struct JointEnergyModel
-    chain::Chain
-    α::Float32
-    σ::Float32
-    ld_steps::Int
-end
-
-function JointEnergyModel(chain::Chain; α::Float32=1.0f0, σ::Float32=0.01f0, ld_steps::Int=20)
-    return JointEnergyModel(chain, α, σ, ld_steps)
-end
-
-Flux.@functor JointEnergyModel
-
-function (jem::JointEnergyModel)(x)
-    jem.chain(x)
-end
-```
-
-```{julia}
-function class_loss(jem::JointEnergyModel, x, y)
-    ŷ = jem(x)
-    ℓ = logitcrossentropy(ŷ, y; agg=x -> x)
-    return ℓ
-end
-
-function gen_loss(jem::JointEnergyModel, x)
-    ŷ = jem(x)
-    xsample = sample(jem, x)
-    ŷsample = jem(xsample)
-    ℓ = -(logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1))
-    return ℓ
-end
-
-function loss(jem::JointEnergyModel, x, y; agg=mean)
-    ℓ_clf = class_loss(jem, x, y)
-    ℓ_gen = gen_loss(jem, x)
-    loss = agg(ℓ_clf .+ ℓ_gen)
-    return loss
-end
-```
-
-
-```{julia}
-function energy_gradient(jem::JointEnergyModel, x)
-    xᵢ = deepcopy(x)
-    # f(x) = sum(logsumexp(jem(x); dims=1))
-    f(x) = sum(map(y -> logsumexp(y), eachcol(jem(x))))
-    gs = gradient(f, xᵢ)[1]
-    return gs
-end
-
-function langevine_dynamics_step(
-    jem::JointEnergyModel, x, t::Int; 
-    a::Float32=1.0f0, b::Float32=1.0f0, γ::Float32=0.9f0
-)
-    # Calculate gradient wrt xold
-    grad_energy = energy_gradient(jem, x)
-
-    # ϵ = a*(b + t)^-γ
-    # η = Float32.(ϵ.*randn(size(grad_energy)))
-    # Δx = ϵ / 2 * grad_energy + η
-
-    η = Float32.(jem.σ .* randn(size(grad_energy)))
-    Δx = jem.α * grad_energy + η
-
-    # New sample
-    x += Δx
-
-    return x
-end
-
-function sample(jem::JointEnergyModel, x)
-    xsample = Float32.(rand(size(x)...)) .* 2 .- 1
-    for i in 1:jem.ld_steps
-        xsample = langevine_dynamics_step(jem, xsample, i)
-    end
-    return xsample
-end
-```
-
 ## Evaluation and Training
 
 ```{julia}
@@ -178,7 +87,7 @@ end
 
 function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 5)
     x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
-    x = sample(model, x[:,:,rand(1:size(x)[end], n)])
+    x = jem.sampler(jem.chain, jem.sampling_rule, size(x)[1:end-1]; batchsize=n)
     num_x = Int(round(ceil(sqrt(n))))
     num_y = Int(round(floor(sqrt(n))))
     plot_data = [heatmap(rotl90(x[:,:,i]), axis=nothing, cb=false) for i in 1:n]
@@ -258,9 +167,9 @@ end
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 512          
+M = 32         
 lr = 1e-4                  
-num_epochs = 50
+num_epochs = 10
 max_patience = 5            
 batchsize = Int(round(nobs/10))
 ```
@@ -271,13 +180,16 @@ batchsize = Int(round(nobs/10))
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    Dense(M, M, elu),
-    Dense(M, M, elu),
+    # Dense(M, M, elu),
+    # Dense(M, M, elu),
     Dense(M, K)
 )
 
 # We initialize the full model
-jem = JointEnergyModel(mlp)
+𝒟x = Uniform(-1,1)
+𝒟y = Categorical(ones(K) ./ K)
+sampler = UnconditionalSampler(𝒟x)
+jem = JointEnergyModel(mlp, sampler)
 ```
 
 ### Training loop

@@ -2,7 +2,7 @@ module Optimisers
 
 using Flux
 using ..JointEnergyModels
-using ..JointEnergyModels: AbstractOptimiser
+using ..JointEnergyModels: AbstractSamplingRule
 
 export SGLD, ImproperSGLD
 
@@ -17,7 +17,7 @@ opt = SGLD()
 opt = SGLD(2.0, 100.0, 0.9)
 ```
 """
-struct SGLD <: AbstractOptimiser
+struct SGLD <: AbstractSamplingRule
     a::Float64
     b::Float64
     gamma::Float64
@@ -32,9 +32,9 @@ function Flux.Optimise.apply!(o::SGLD, x, Δ)
         (zero(x), Ref(1))
     end::Tuple{typeof(x),Base.RefValue{Int}}
 
-    @. εt = a * (b + t)^-γ
-    ηt = εt .* randn(size(Δ))
-    @. Δ = 0.5 * εt * Δ + ηt
+    εt = @.(a * (b + t)^-γ)
+    ηt = εt .* Float32.(randn(size(Δ)))
+    Δ = Float32.(@.(0.5 * εt * Δ + ηt))
 
     t[] += 1
 
@@ -52,7 +52,7 @@ opt = ImproperSGLD()
 opt = SGLD(2.0, 0.01)
 ```
 """
-struct ImproperSGLD <: AbstractOptimiser
+struct ImproperSGLD <: AbstractSamplingRule
     alpha::Float64
     sigma::Float64
 end
@@ -61,8 +61,8 @@ ImproperSGLD(α::Real=2.0, σ::Real=0.01) = ImproperSGLD(α, σ)
 function Flux.Optimise.apply!(o::ImproperSGLD, x, Δ)
     α, σ = o.alpha, o.sigma
 
-    ηt = σ .* randn(size(Δ))
-    @. Δ = 0.5 * α * Δ + ηt
+    ηt = σ .* Float32.(randn(size(Δ)))
+    Δ = Float32.(@.(0.5 * α * Δ + ηt))
 
     return Δ
 end

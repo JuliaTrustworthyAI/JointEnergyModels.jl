@@ -15,7 +15,7 @@ using CounterfactualExplanations.Models: load_mnist_mlp, load_mnist_ensemble
 
 ```{julia}
 X, y = load_mnist().X, load_mnist().y
-nclasses = size(y, 1)
+K = size(y, 1)
 mlp = load_mnist_mlp().model
 f_mlp(x) = mlp(x)
 ens = load_mnist_ensemble().model
@@ -24,7 +24,9 @@ f_ens(x) = sum(map(mlp -> mlp(x), ens))/length(ens)
 
 
 ```{julia}
-sampler = ConditionalSampler(Uniform(-1,1), Categorical(ones(nclasses) ./ nclasses))
+𝒟x = Uniform(-1,1)
+𝒟y = Categorical(ones(K) ./ K)
+sampler = UnconditionalSampler(𝒟x)
 opt = ImproperSGLD()
 ```
 
@@ -35,7 +37,7 @@ _w = 1500
 plts = []
 neach = 10
 for i in 1:10
-    x = sampler(f_mlp, opt, size(X,1), neach; y=i, niter=n_iter)
+    x = sampler(f_mlp, opt, size(X)[1:1]; batchsize=neach, niter=n_iter)
     plts_i = []
     for j in 1:size(x, 2)
         xj = reshape(x[:,j], 28, 28)

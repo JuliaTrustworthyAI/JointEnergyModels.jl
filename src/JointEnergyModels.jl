@@ -1,12 +1,15 @@
 module JointEnergyModels
 
 using Flux
-const AbstractOptimiser = Flux.Optimise.AbstractOptimiser
-
+abstract type AbstractSamplingRule <: Flux.Optimise.AbstractOptimiser end
 abstract type AbstractSampler end
 
-include("main.jl")
+include("utils.jl")
 export energy
+
+include("model.jl")
+export JointEnergyModel
+export class_loss, gen_loss, loss
 
 include("Optimisers.jl")
 using .Optimisers

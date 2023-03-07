@@ -87,7 +87,7 @@ end
 
 function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 5)
     x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
-    x = jem.sampler(jem.chain, jem.sampling_rule, size(x)[1:end-1]; batchsize=n)
+    x = jem.sampler(jem.chain, jem.sampling_rule, size(x))
     num_x = Int(round(ceil(sqrt(n))))
     num_y = Int(round(floor(sqrt(n))))
     plot_data = [heatmap(rotl90(x[:,:,i]), axis=nothing, cb=false) for i in 1:n]

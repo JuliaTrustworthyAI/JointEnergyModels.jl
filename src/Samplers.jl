@@ -19,29 +19,23 @@ struct ConditionalSampler <: AbstractSampler
 end
 
 function (sampler::ConditionalSampler)(
-    model, rule::JointEnergyModels.AbstractSamplingRule, input_dims::Dims;
-    batchsize::Int=1, y::Union{Nothing, Int}=nothing, niter::Int=100, as_array::Bool=true
+    model, rule::JointEnergyModels.AbstractSamplingRule, dims::Dims;
+    niter::Int=100, y::Union{Nothing,Int}=nothing
 )
 
+
     # Setup:
-    x = map(i -> Float32.(rand(sampler.𝒟x, input_dims..., 1)), 1:batchsize)
+    x = Float32.(rand(sampler.𝒟x, dims...))
     if isnothing(y)
         y = rand(sampler.𝒟y)
     end
     f(x) = energy(model, x, y)
 
     # Training:
-    x = map(x) do _x
-        for i in 1:niter
-            Δ = gradient(f, _x)[1]
-            Δ = apply!(rule, _x, Δ)
-            _x -= Δ
-        end
-        return _x
-    end
-
-    if as_array
-        x = reduce((x1, x2) -> cat(x1,x2,dims=length(input_dims) + 1), x)
+    for i in 1:niter
+        Δ = gradient(f, x)[1]
+        Δ = apply!(rule, x, Δ)
+        x -= Δ
     end
 
     return x
@@ -58,26 +52,19 @@ struct UnconditionalSampler <: AbstractSampler
 end
 
 function (sampler::UnconditionalSampler)(
-    model, rule::JointEnergyModels.AbstractSamplingRule, input_dims::Dims;
-    batchsize::Int=1, niter::Int=20, as_array::Bool=true
+    model, rule::JointEnergyModels.AbstractSamplingRule, dims::Dims;
+    niter::Int=20
 )
 
     # Setup:
-    x = map(i -> Float32.(rand(sampler.𝒟x, input_dims..., 1)), 1:batchsize)
+    x = Float32.(rand(sampler.𝒟x, dims...))
     f(x) = energy(model, x)
 
     # Training:
-    x = map(x) do _x
-        for i in 1:niter
-            Δ = gradient(f, _x)[1]
-            Δ = apply!(rule, _x, Δ)
-            _x -= Δ
-        end
-        return _x
-    end
-
-    if as_array
-        x = reduce((x1, x2) -> cat(x1, x2, dims=length(input_dims) + 1), x)
+    for i in 1:niter
+        Δ = gradient(f, x)[1]
+        Δ = apply!(rule, x, Δ)
+        x -= Δ
     end
 
     return x

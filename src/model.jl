@@ -36,7 +36,7 @@ Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
-    xsample = jem.sampler(jem.chain, jem.sampling_rule, size(x)[1:end-1]; batchsize=size(x)[end])
+    xsample = jem.sampler(jem.chain, jem.sampling_rule, size(x))
     ŷsample = jem(xsample)
     ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
     return ℓ

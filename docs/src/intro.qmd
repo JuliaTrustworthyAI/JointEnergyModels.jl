@@ -167,9 +167,9 @@ end
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 32         
+M = 64         
 lr = 1e-4                  
-num_epochs = 10
+num_epochs = 25
 max_patience = 5            
 batchsize = Int(round(nobs/10))
 ```
@@ -180,7 +180,7 @@ batchsize = Int(round(nobs/10))
 mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
-    # Dense(M, M, elu),
+    Dense(M, M, elu),
     # Dense(M, M, elu),
     Dense(M, K)
 )
@@ -190,6 +190,24 @@ mlp = Chain(
 𝒟y = Categorical(ones(K) ./ K)
 sampler = UnconditionalSampler(𝒟x)
 jem = JointEnergyModel(mlp, sampler)
+```
+
+```{julia}
+n_iter = 100
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = jem.sampler(jem.chain, jem.sampling_rule, (size(Xtrain)[1:end-1]..., neach); niter=n_iter)
+    plts_i = []
+    for j in 1:size(x, 3)
+        xj = x[:,:,j]
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
 ### Training loop

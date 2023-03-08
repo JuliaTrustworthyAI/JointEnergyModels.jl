@@ -10,8 +10,8 @@ eval(setup_docs)
 ## Data
 
 ```{julia}
-nobs = 10000
-n_digits = 28
+nobs = 1000
+n_digits = 8
 
 function _resize(x, size=(n_digits, n_digits))
     if n_digits != 28
@@ -167,7 +167,7 @@ end
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 64         
+M = 512       
 lr = 1e-4                  
 num_epochs = 25
 max_patience = 5            
@@ -181,7 +181,7 @@ mlp = Chain(
     Flux.flatten,
     Dense(prod((D,D)), M, elu),
     Dense(M, M, elu),
-    # Dense(M, M, elu),
+    Dense(M, M, elu),
     Dense(M, K)
 )
 

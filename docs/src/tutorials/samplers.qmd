@@ -29,13 +29,13 @@ f_ens(x) = sum(map(mlp -> mlp(x), ens))/length(ens)
 𝒟y = Categorical(ones(K) ./ K)
 sampler = UnconditionalSampler(𝒟x)
 conditional_sampler = ConditionalSampler(𝒟x, 𝒟y)
-opt = ImproperSGLD()
+opt = SGLD(10.0, 1000.0, 0.9)
 ```
 
 ### Unconditional Draws
 
 ```{julia}
-n_iter = 100
+n_iter = 1000
 _w = 1500
 plts = []
 neach = 10
@@ -91,7 +91,8 @@ plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
 ```{julia}
-n_iter = 100
+opt = SGLD(10.0, 1000.0, 0.9)
+n_iter = 10000
 _w = 1500
 plts = []
 neach = 10

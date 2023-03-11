@@ -4,7 +4,7 @@ CurrentModule = JointEnergyModels
 
 # JointEnergyModels
 
-Documentation for [JointEnergyModels](https://github.com/pat-alt/JointEnergyModels.jl).
+Documentation for [JointEnergyModels](https://github.com/JuliaTrustworthyAI/JointEnergyModels.jl).
 
 ```@index
 ```

@@ -8,11 +8,11 @@ DocMeta.setdocmeta!(JointEnergyModels, :DocTestSetup, :(setup_docs); recursive=t
 makedocs(;
     modules=[JointEnergyModels],
     authors="Patrick Altmeyer",
-    repo="https://github.com/pat-alt/JointEnergyModels.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/JuliaTrustworthyAI/JointEnergyModels.jl/blob/{commit}{path}#{line}",
     sitename="JointEnergyModels.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://pat-alt.github.io/JointEnergyModels.jl",
+        canonical="https://juliatrustworthyai.github.io/JointEnergyModels.jl",
         edit_link="main",
         assets=String[]
     ),
@@ -34,6 +34,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/pat-alt/JointEnergyModels.jl",
+    repo="github.com/JuliaTrustworthyAI/JointEnergyModels.jl",
     devbranch="main",
 )

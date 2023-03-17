@@ -30,6 +30,7 @@ function (sampler::ConditionalSampler)(
         y = rand(sampler.𝒟y)
     end
     f(x) = energy(model, x, y)
+    rule = deepcopy(rule)
 
     # Training:
     for i in 1:niter
@@ -59,6 +60,7 @@ function (sampler::UnconditionalSampler)(
     # Setup:
     x = Float32.(rand(sampler.𝒟x, dims...))
     f(x) = energy(model, x)
+    rule = deepcopy(rule)
 
     # Training:
     for i in 1:niter

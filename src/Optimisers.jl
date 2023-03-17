@@ -28,9 +28,10 @@ SGLD(a::Real=2.0, b::Real=1.0, γ::Real=0.9) = SGLD(a, b, γ, IdDict())
 function Flux.Optimise.apply!(o::SGLD, x, Δ)
     a, b, γ = o.a, o.b, o.gamma
 
-    εt, t = get!(o.state, x) do
-        (zero(x), Ref(1))
-    end::Tuple{typeof(x),Base.RefValue{Int}}
+    t = get!(o.state, :t, Ref(1))
+    εt = get!(o.state, t) do
+        (zero(x),)
+    end::Tuple{typeof(x)}
 
     εt = @.(a * (b + t)^-γ)
     ηt = εt .* Float32.(randn(size(Δ)))

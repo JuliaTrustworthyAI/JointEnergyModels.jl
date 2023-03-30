@@ -23,7 +23,6 @@ function (sampler::ConditionalSampler)(
     niter::Int=100, y::Union{Nothing,Int}=nothing
 )
 
-
     # Setup:
     x = Float32.(rand(sampler.𝒟x, dims...))
     if isnothing(y)

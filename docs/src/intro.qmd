@@ -68,9 +68,9 @@ function evaluation(model::JointEnergyModel, val_set::DataLoader)
     acc = 0.0
     num = 0
     for (x, y) in val_set
-        ℓ_clf += sum(class_loss(model, x, y))
-        ℓ_gen += sum(gen_loss(model, x))
-        ℓ += loss(model, x, y)
+        ℓ_clf += sum(JointEnergyModels.class_loss(model, x, y))
+        ℓ_gen += sum(JointEnergyModels.gen_loss(model, x))
+        ℓ += JointEnergyModels.loss(model, x, y)
         acc += accuracy(model, x, y)
         num += size(x)[end]
     end
@@ -111,7 +111,7 @@ function training(
             # Forward pass:
             x, y = data
             val, grads = Flux.withgradient(model) do m
-                loss(m, x, y)
+                JointEnergyModels.loss(m, x, y)
             end
 
             # Save the loss from the forward pass. (Done outside of gradient.)
@@ -167,7 +167,7 @@ end
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 512       
+M = 512   
 lr = 1e-4                  
 num_epochs = 25
 max_patience = 5            

@@ -19,4 +19,6 @@ include("Samplers.jl")
 using .Samplers
 export ConditionalSampler, UnconditionalSampler
 
+include("training.jl")
+
 end

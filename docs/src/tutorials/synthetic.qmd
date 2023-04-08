@@ -9,23 +9,23 @@ eval(setup_docs)
 ## Binary Classification
 
 ```{julia}
-X, y = make_blobs(1000, 2, centers=2)
+X, y = make_blobs(1000, 2, centers=3)
 X = Float32.(permutedims(matrix(X)))
-y = permutedims(Int.(y.refs))
-y[y .== 2] .= 0
-display(scatter(X[1,:], X[2,:], color=vec(y), label=""))
+y_labels = Int.(y.refs)
+y = Flux.onehotbatch(y, sort(unique(y_labels)))
+display(scatter(X[1,:], X[2,:], color=vec(y_labels), label=""))
 train_set = DataLoader((X, y), batchsize=32)
 ```
 
 ```{julia}
 models = Dict(
-    "Logistic Regression" => Chain(Dense(2, 1, σ)),
-    "MLP" => Chain(Dense(2, 4, σ), Dense(4, 1, σ)),
+    "Logistic Regression" => Chain(Dense(2, 3)),
+    "MLP" => Chain(Dense(2, 10, relu), Dense(10, 3)),
 )
 ```
 
 ```{julia}
-loss(y_hat, y) = Flux.Losses.binarycrossentropy(y_hat, y)
+loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
 rule = Descent(0.1)
 ```
 
@@ -38,16 +38,36 @@ for (name, model) in models
     opt_state = Flux.setup(rule, model)
     for epoch in 1:n_epochs
         Flux.train!(model, train_set, opt_state) do m, x, y
-            loss(m(x), y)
+            loss(model(x), y)
         end
     end
-    plt = contour(x1, x2, (x, y) -> model([x, y])[1], fill=true, alpha=0.5, title=name, cbar=false)
-    scatter!(X[1,:], X[2,:], color=vec(y), label="")
+    plt = contour(x1, x2, (x, y) -> softmax(model([x, y]))[1], fill=true, alpha=0.5, title=name, cbar=false)
+    scatter!(X[1,:], X[2,:], color=vec(y_labels), label="")
     push!(plts, plt)
 end
 plot(plts..., layout=(1, 2), size=(800, 400))
 ```
 
+## Joint Energy Model
+
+```{julia}
+# We initialize the full model:
+𝒟x = Normal()
+𝒟y = Categorical(ones(2) ./ 2)
+sampler = UnconditionalSampler(𝒟x)
+jem = JointEnergyModel(models["MLP"], sampler)
+# Initialise training:
+opt = Adam(0.001)
+opt_state = Flux.setup(opt, jem)
+num_epochs = 5
+```
+
+```{julia}
+logs = JointEnergyModels.training(jem, train_set, opt_state; num_epochs=num_epochs)
+```
 
 
-## Multiclass Classification
+```{julia}
+plt = contour(x1, x2, (x, y) -> softmax(jem([x, y]))[2], fill=true, alpha=0.5, title=name, cbar=true)
+scatter!(X[1,:], X[2,:], color=vec(y_labels), label="")
+```

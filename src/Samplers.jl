@@ -72,4 +72,31 @@ function (sampler::UnconditionalSampler)(
 
 end
 
+struct JointSampler <: AbstractSampler
+    𝒟x::Distribution
+    𝒟y::Distribution
+end
+
+function (sampler::JointSampler)(
+    model, rule::JointEnergyModels.AbstractSamplingRule, dims::Dims;
+    niter::Int=100
+)
+
+    # Setup:
+    x = Float32.(rand(sampler.𝒟x, dims...))
+    rule = deepcopy(rule)
+    f(x,y) = energy(model, x, y)
+
+    # Training:
+    for i in 1:niter
+        y = rand(sampler.𝒟y)
+        Δ = gradient(f, x, y)[1]
+        Δ = apply!(rule, x, Δ)
+        x -= Δ
+    end
+
+    return x
+
+end
+
 end

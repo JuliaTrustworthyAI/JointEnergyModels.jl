@@ -178,7 +178,7 @@ batchsize = Int(round(nobs/10))
 
 ```{julia}
 mlp = Chain(
-    Flux.flatten,
+    MLUtils.flatten,
     Dense(prod((D,D)), M, elu),
     Dense(M, M, elu),
     Dense(M, M, elu),
@@ -188,7 +188,7 @@ mlp = Chain(
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = UnconditionalSampler(𝒟x)
+sampler = UnconditionalSampler(𝒟x, input_size=(D,D), batch_size=batch_size)
 jem = JointEnergyModel(mlp, sampler)
 ```
 
@@ -198,7 +198,7 @@ _w = 1500
 plts = []
 neach = 10
 for i in 1:10
-    x = jem.sampler(jem.chain, jem.sampling_rule, (size(Xtrain)[1:end-1]..., neach); niter=n_iter)
+    x = jem.sampler(jem.chain, jem.sampling_rule; niter=n_iter)
     plts_i = []
     for j in 1:size(x, 3)
         xj = x[:,:,j]

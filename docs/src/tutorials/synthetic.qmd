@@ -14,7 +14,8 @@ X = Float32.(permutedims(matrix(X)))
 y_labels = Int.(y.refs)
 y = Flux.onehotbatch(y, sort(unique(y_labels)))
 display(scatter(X[1,:], X[2,:], color=vec(y_labels), label=""))
-train_set = DataLoader((X, y), batchsize=32)
+batch_size = 32
+train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
 ```
 
 ```{julia}
@@ -54,16 +55,16 @@ plot(plts..., layout=(1, 2), size=(800, 400))
 # We initialize the full model:
 𝒟x = Normal()
 𝒟y = Categorical(ones(2) ./ 2)
-sampler = UnconditionalSampler(𝒟x)
+sampler = UnconditionalSampler(𝒟x, input_size=size(X)[1:end-1], batch_size=batch_size)
 jem = JointEnergyModel(models["MLP"], sampler)
 # Initialise training:
 opt = Adam(0.001)
 opt_state = Flux.setup(opt, jem)
-num_epochs = 5
+num_epochs = 100
 ```
 
 ```{julia}
-logs = JointEnergyModels.training(jem, train_set, opt_state; num_epochs=num_epochs)
+logs = JointEnergyModels.train_model(jem, train_set, opt_state; num_epochs=num_epochs)
 ```
 
 

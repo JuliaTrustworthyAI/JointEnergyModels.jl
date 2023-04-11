@@ -1,3 +1,4 @@
+using ChainRulesCore
 using Flux
 using Flux: logsumexp
 using Flux.Losses: logitcrossentropy
@@ -6,10 +7,15 @@ struct JointEnergyModel
     chain::Chain
     sampler::AbstractSampler
     sampling_rule::AbstractSamplingRule
+    sampling_steps::Int
 end
 
-function JointEnergyModel(chain::Chain, sampler::AbstractSampler; sampling_rule=ImproperSGLD())
-    JointEnergyModel(chain, sampler, sampling_rule)
+function JointEnergyModel(
+    chain::Chain, sampler::AbstractSampler; 
+    sampling_rule=ImproperSGLD(),
+    sampling_steps=10,
+)
+    JointEnergyModel(chain, sampler, sampling_rule, sampling_steps)
 end
 
 Flux.@functor JointEnergyModel
@@ -36,8 +42,12 @@ Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x)
     ŷ = jem(x)
-    xsample = jem.sampler(jem.chain, jem.sampling_rule, size(x))
-    ŷsample = jem(xsample)
+    xsample = []
+    ignore_derivatives() do
+        _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
+        push!(xsample, _xsample)
+    end
+    ŷsample = jem(xsample...)
     ℓ = logsumexp(ŷ; dims=1) .- logsumexp(ŷsample; dims=1)
     return ℓ
 end

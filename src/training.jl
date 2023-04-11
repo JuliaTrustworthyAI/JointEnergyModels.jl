@@ -23,9 +23,11 @@ function evaluation(jem::JointEnergyModel, val_set::DataLoader)
     return ℓ / num, ℓ_clf / num, ℓ_gen / num, acc / length(val_set)
 end
 
-function training(
+function train_model(
     jem::JointEnergyModel, train_set, opt_state;
-    num_epochs::Int=100, val_set::Union{Nothing,DataLoader}=nothing, max_patience::Int=20,
+    num_epochs::Int=100, 
+    val_set::Union{Nothing,DataLoader}=nothing, 
+    max_patience::Int=20,
     verbosity::Int=num_epochs
 )
     training_log = []

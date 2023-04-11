@@ -95,71 +95,6 @@ function samples_generated(model::JointEnergyModel, dl::DataLoader, n::Int=16; i
 end
 ```
 
-```{julia}
-function training(
-    model::JointEnergyModel, train_set, opt_state; 
-    num_epochs::Int=100, val_set::Union{Nothing, DataLoader}=nothing, max_patience::Int=20,
-    verbosity::Int=num_epochs
-)
-    training_log = []
-    for epoch in 1:num_epochs
-        training_losses = Float32[]
-
-        # Training:
-        for (i, data) in enumerate(train_set)
-
-            # Forward pass:
-            x, y = data
-            val, grads = Flux.withgradient(model) do m
-                JointEnergyModels.loss(m, x, y)
-            end
-
-            # Save the loss from the forward pass. (Done outside of gradient.)
-            push!(training_losses, val)
-
-            # Detect loss of Inf or NaN. Print a warning, and then skip update!
-            if !isfinite(val)
-                @warn "loss is $val on item $i" epoch
-                continue
-            end
-
-            Flux.update!(opt_state, model, grads[1])
-        end
-
-        # Evluation:
-        if !isnothing(val_set)
-            ℓ, ℓ_clf, ℓ_gen, acc = evaluation(model, val_set)
-            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, acc, training_losses))
-        else
-            ℓ, _, _, acc = evaluation(model, train_set)
-            push!(training_log, (; ℓ, acc, training_losses))
-        end
-
-        # Verbosity:
-        if (verbosity > 0) && (epoch % round(num_epochs / verbosity) == 0)
-            if isnothing(val_set)
-                @info "Training loss in epoch $epoch: $ℓ"
-                @info "Training accuracy in epoch $epoch: $acc"
-            else
-                @info "Validation losses/accuracy in epoch $epoch:"
-                println("Classification: $ℓ_clf")
-                println("Generative: $ℓ_gen")
-                println("Total: $ℓ")
-                println("Accuracy: $acc")
-            end
-        end
-
-        # Early Stopping:
-        _loss() = ℓ
-        es = Flux.early_stopping(_loss, max_patience)
-        es() && break
-
-    end
-
-    return training_log
-end
-```
-
 ## Experiments
 
 ### Hyperparameters
@@ -222,7 +157,7 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```
 
 ```{julia}
-logs = training(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
+logs = train_model(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
 ```
 
 ### The final evaluation

@@ -27,7 +27,7 @@ function train_model(
     jem::JointEnergyModel, train_set, opt_state;
     num_epochs::Int=100, 
     val_set::Union{Nothing,DataLoader}=nothing, 
-    max_patience::Int=20,
+    max_patience::Int=10,
     verbosity::Int=num_epochs
 )
     training_log = []

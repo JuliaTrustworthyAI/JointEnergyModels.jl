@@ -51,27 +51,6 @@ function (sampler::AbstractSampler)(
 
 end
 
-"""
-    generate_samples(model, rule::Flux.Optimise.AbstractOptimiser, n::Int; kwargs...)
-
-A convenience function for generating samples for a given model, sampler and sampling rule. If `n` is `missing`, then the sampler's `batch_size` is used.
-"""
-function generate_samples(sampler, model, rule::Flux.Optimise.AbstractOptimiser, n::Int; kwargs...)
-    n = ismissing(n) ? nothing : n
-    return (sampler::AbstractSampler)(model, rule; n_samples=n, kwargs...)
-end
-
-"""
-    generate_conditional_samples(model, rule::Flux.Optimise.AbstractOptimiser, n::Int, y::Int; kwargs...)
-
-A convenience function for generating conditional samples for a given model, sampler and sampling rule. If `n` is `missing`, then the sampler's `batch_size` is used. The conditioning value `y` needs to be specified.
-"""
-function generate_conditional_samples(sampler, model, rule::Flux.Optimise.AbstractOptimiser, n::Int, y::Int; kwargs...)
-    @assert typeof(sampler) <: ConditionalSampler "sampler must be a ConditionalSampler"
-    n = ismissing(n) ? nothing : n
-    return (sampler::ConditionalSampler)(model, rule; n_samples=n, y=y, kwargs...)
-end
-
 @doc raw"""
     ConditionalSampler <: AbstractSampler
 

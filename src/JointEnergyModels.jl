@@ -10,6 +10,7 @@ export energy
 include("model.jl")
 export JointEnergyModel
 export class_loss, gen_loss, loss
+export generate_samples, generate_conditional_samples
 
 include("Optimisers.jl")
 using .Optimisers
@@ -20,5 +21,6 @@ using .Samplers
 export ConditionalSampler, UnconditionalSampler
 
 include("training.jl")
+export train_model
 
 end

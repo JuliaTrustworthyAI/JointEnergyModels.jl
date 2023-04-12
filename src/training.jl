@@ -28,9 +28,15 @@ function train_model(
     num_epochs::Int=100, 
     val_set::Union{Nothing,DataLoader}=nothing, 
     max_patience::Int=10,
-    verbosity::Int=num_epochs
+    verbosity::Int=num_epochs,
+    use_class_loss::Bool=true, 
+    use_gen_loss::Bool=true, 
+    use_reg_loss::Bool=true,
+    α::Float64=0.1,
 )
     training_log = []
+    not_finite_counter = 0
+
     for epoch in 1:num_epochs
         training_losses = Float32[]
 
@@ -40,7 +46,13 @@ function train_model(
             # Forward pass:
             x, y = data
             val, grads = Flux.withgradient(jem) do m
-                JointEnergyModels.loss(m, x, y)
+                JointEnergyModels.loss(
+                    m, x, y; 
+                    use_class_loss=use_class_loss, 
+                    use_gen_loss=use_gen_loss, 
+                    use_reg_loss=use_reg_loss,
+                    α=α,
+                )
             end
 
             # Save the loss from the forward pass. (Done outside of gradient.)
@@ -48,14 +60,22 @@ function train_model(
 
             # Detect loss of Inf or NaN. Print a warning, and then skip update!
             if !isfinite(val)
-                @warn "loss is $val on item $i" epoch
                 continue
             end
 
             Flux.update!(opt_state, jem, grads[1])
         end
 
-        # Evluation:
+        # Detect if loss has been Inf or NaN for 10 consecutive batches and break.
+        if any(!isfinite, training_losses)
+            not_finite_counter += 1
+            if not_finite_counter == 10
+                @warn "Loss not Inf or NaN for 10 epochs. Stopping training."
+                break
+            end
+        end
+
+        # Evaluation:
         if !isnothing(val_set)
             ℓ, ℓ_clf, ℓ_gen, acc = evaluation(jem, val_set)
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, acc, training_losses))

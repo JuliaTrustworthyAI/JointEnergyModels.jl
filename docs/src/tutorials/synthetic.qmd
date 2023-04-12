@@ -9,6 +9,7 @@ eval(setup_docs)
 ## Binary Classification
 
 ```{julia}
+Random.seed!(42)
 X, y = make_blobs(1000, 2, centers=3)
 X = Float32.(permutedims(matrix(X)))
 y_labels = Int.(y.refs)
@@ -22,7 +23,7 @@ train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
 n_hidden = 5
 models = Dict(
     "Logistic Regression" => Chain(Dense(2, 3)),
-    "MLP" => Chain(Dense(2, n_hidden, elu), Dense(n_hidden, 3)),
+    "MLP" => Chain(Dense(2, n_hidden, sigmoid), Dense(n_hidden, 3)),
 )
 ```
 
@@ -61,14 +62,14 @@ jem = JointEnergyModel(models["MLP"], sampler)
 # Initialise training:
 opt = Adam(1e-3)
 opt_state = Flux.setup(opt, jem)
-num_epochs = 50
+num_epochs = 100
 ```
 
 ```{julia}
 logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
-    α=0.1,
+    α=1e-2,
     # use_class_loss=false,
     # use_gen_loss=false,
     # use_reg_loss=false,

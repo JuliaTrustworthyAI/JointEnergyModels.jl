@@ -104,7 +104,7 @@ D = n_digits
 K = 10                      
 M = 32
 lr = 1e-3                
-num_epochs = 50
+num_epochs = 100
 max_patience = 5            
 batchsize = Int(round(nobs/10))
 ```
@@ -114,7 +114,7 @@ batchsize = Int(round(nobs/10))
 ```{julia}
 mlp = Chain(
     MLUtils.flatten,
-    Dense(prod((D,D)), M, elu),
+    Dense(prod((D,D)), M, swish),
     # Dense(M, M, elu),
     # Dense(M, M, elu),
     Dense(M, K)

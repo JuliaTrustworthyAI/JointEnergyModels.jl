@@ -11,7 +11,7 @@ eval(setup_docs)
 
 ```{julia}
 nobs = 1000
-n_digits = 8
+n_digits = 28
 
 function _resize(x, size=(n_digits, n_digits))
     if n_digits != 28
@@ -102,9 +102,9 @@ end
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 512   
-lr = 1e-4                  
-num_epochs = 25
+M = 32
+lr = 1e-3                
+num_epochs = 100
 max_patience = 5            
 batchsize = Int(round(nobs/10))
 ```
@@ -123,7 +123,7 @@ mlp = Chain(
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = UnconditionalSampler(𝒟x, input_size=(D,D), batch_size=batch_size)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,D), batch_size=batch_size)
 jem = JointEnergyModel(mlp, sampler)
 ```
 
@@ -133,7 +133,7 @@ _w = 1500
 plts = []
 neach = 10
 for i in 1:10
-    x = jem.sampler(jem.chain, jem.sampling_rule; niter=n_iter)
+    x = jem.sampler(jem.chain, jem.sampling_rule; niter=n_iter, n_samples=neach)
     plts_i = []
     for j in 1:size(x, 3)
         xj = x[:,:,j]
@@ -157,12 +157,33 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```
 
 ```{julia}
-logs = train_model(jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set)
+logs = train_model(
+    jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set,
+    verbosity = 50,
+    α = 0.1
+)
 ```
 
 ### The final evaluation
 
 ```{julia}
-ℓ_test, ℓ_clf_test, ℓ_gen_test, acc_test = evaluation(jem, test_set)
+n_iter = 100
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = jem.sampler(jem.chain, jem.sampling_rule; niter=n_iter, n_samples=neach, y=i)
+    plts_i = []
+    for j in 1:size(x, 3)
+        xj = x[:,:,j]
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
+```{julia}
+ℓ_test, ℓ_clf_test, ℓ_gen_test, acc_test = evaluation(jem, test_set)
+```

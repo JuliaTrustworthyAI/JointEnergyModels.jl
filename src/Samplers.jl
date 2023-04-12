@@ -86,6 +86,15 @@ function ConditionalSampler(
 end
 
 """
+    energy(sampler::ConditionalSampler, model, x, y)
+
+Energy function for `ConditionalSampler`.
+"""
+function energy(sampler::ConditionalSampler, model, x, y)
+    return energy(model, x, y)
+end
+
+"""
     mcmc_samples(
         sampler::ConditionalSampler,
         model, rule::Flux.Optimise.AbstractOptimiser,
@@ -107,8 +116,8 @@ function mcmc_samples(
     if isnothing(y)
         y = rand(sampler.𝒟y)
     end
-    E(x) = energy(model, x, y)
-
+    E(x) = energy(sampler, model, x, y)
+    
     # Training:
     i = 1
     while i <= niter

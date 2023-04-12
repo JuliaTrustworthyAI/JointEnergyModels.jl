@@ -19,7 +19,7 @@ train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
 ```
 
 ```{julia}
-n_hidden = 32
+n_hidden = 64
 models = Dict(
     "Logistic Regression" => Chain(Dense(2, 3)),
     "MLP" => Chain(Dense(2, n_hidden, elu), Dense(n_hidden, 3)),
@@ -56,7 +56,7 @@ plot(plts..., layout=(1, 2), size=(800, 400))
 # We initialize the full model:
 𝒟x = Normal()
 𝒟y = Categorical(ones(2) ./ 2)
-sampler = UnconditionalSampler(𝒟x, input_size=size(X)[1:end-1], batch_size=batch_size)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=size(X)[1:end-1], batch_size=batch_size)
 jem = JointEnergyModel(models["MLP"], sampler)
 # Initialise training:
 opt = Descent()
@@ -68,7 +68,10 @@ num_epochs = 50
 logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
-    α=0.1,
+    α=0.01,
+    use_class_loss=false,
+    # use_gen_loss=false,
+    # use_reg_loss=false,
 )
 ```
 
@@ -84,9 +87,35 @@ plot(plts..., layout=(1, 3), size=(1200, 400))
 ```
 
 ```{julia}
-X̂ = generate_samples(jem, 1000)
+X̂ = generate_samples(jem, 1000; niter=1000)
 ŷ = onecold(softmax(jem(X̂)))
 scatter(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels), alpha=0.5)
 scatter!(X̂[1,:], X̂[2,:], color=vec(ŷ), group=vec(ŷ), title="Generated Samples", shape=:star5)
+```
+
+```{julia}
+xlims = (-30,30)
+ylims = (-30,30)
+x1 = range(1.0f0.*xlims...,length=100)
+x2 = range(1.0f0.*ylims...,length=100)
+plts = []
+for target in 1:3
+    X̂ = generate_conditional_samples(jem, 100, target; niter=1000) 
+    plt = contour(
+        x1, x2, (x, y) -> softmax(jem([x, y]))[target], 
+        fill=true, alpha=0.5, title="Target: $target", cbar=false,
+        xlims=xlims,
+        ylims=ylims,
+    )
+    scatter!(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels), alpha=0.5)
+    scatter!(
+        X̂[1,:], X̂[2,:], 
+        color=repeat([target], size(X̂,2)), 
+        group=repeat([target], size(X̂,2)), 
+        title="Generated Samples", shape=:star5, ms=10
+    )
+    push!(plts, plt)
+end
+plot(plts..., layout=(1, 3), size=(1200, 400))
 ```
 

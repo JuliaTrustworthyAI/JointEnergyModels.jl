@@ -11,16 +11,18 @@ function evaluation(jem::JointEnergyModel, val_set::DataLoader)
     ℓ = 0.0
     ℓ_clf = 0.0
     ℓ_gen = 0.0
+    ℓ_reg = 0.0
     acc = 0.0
     num = 0
     for (x, y) in val_set
         ℓ_clf += sum(JointEnergyModels.class_loss(jem, x, y))
-        ℓ_gen += sum(JointEnergyModels.gen_loss(jem, x))
+        ℓ_gen += sum(JointEnergyModels.gen_loss(jem, x, y))
+        ℓ_reg += sum(JointEnergyModels.reg_loss(jem, x, y))
         ℓ += JointEnergyModels.loss(jem, x, y)
         acc += accuracy(jem, x, y)
         num += size(x)[end]
     end
-    return ℓ / num, ℓ_clf / num, ℓ_gen / num, acc / length(val_set)
+    return ℓ / num, ℓ_clf / num, ℓ_gen / num, ℓ_reg / num, acc / length(val_set)
 end
 
 function train_model(
@@ -77,11 +79,11 @@ function train_model(
 
         # Evaluation:
         if !isnothing(val_set)
-            ℓ, ℓ_clf, ℓ_gen, acc = evaluation(jem, val_set)
-            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, acc, training_losses))
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, val_set)
+            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         else
-            ℓ, ℓ_clf, ℓ_gen, acc = evaluation(jem, train_set)
-            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, acc, training_losses))
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, train_set)
+            push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         end
 
         # Verbosity:
@@ -90,12 +92,14 @@ function train_model(
                 @info "Traning losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")
                 println("Generative: $ℓ_gen")
+                println("Regularisation: $ℓ_reg")
                 println("Total: $ℓ")
                 println("Accuracy: $acc")
             else
                 @info "Validation losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")
                 println("Generative: $ℓ_gen")
+                println("Regularisation: $ℓ_reg")
                 println("Total: $ℓ")
                 println("Accuracy: $acc")
             end

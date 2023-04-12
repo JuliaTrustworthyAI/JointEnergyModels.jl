@@ -13,7 +13,7 @@ end
 function JointEnergyModel(
     chain::Chain, sampler::AbstractSampler;
     sampling_rule=ImproperSGLD(),
-    sampling_steps=20
+    sampling_steps=sampling_rule isa ImproperSGLD ? 20 : 1000
 )
     JointEnergyModel(chain, sampler, sampling_rule, sampling_steps)
 end

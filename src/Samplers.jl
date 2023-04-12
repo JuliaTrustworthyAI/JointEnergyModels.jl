@@ -34,7 +34,7 @@ function (sampler::AbstractSampler)(
     inp_samples = Float32.(cat(rand_imgs, old_imgs, dims=ndims(sampler.buffer)))
 
     # Perform MCMC sampling:
-    rule = isnothing(clip_grads) ? rule : Optimiser(ClipValue(clip_grads), rule) 
+    rule = isnothing(clip_grads) ? rule : Optimiser(ClipValue(clip_grads), rule)
     inp_samples = mcmc_samples(
         sampler, model, rule, inp_samples;
         niter=niter,
@@ -117,7 +117,8 @@ function mcmc_samples(
         y = rand(sampler.𝒟y)
     end
     E(x) = energy(sampler, model, x, y)
-    
+    rule = deepcopy(rule)
+
     # Training:
     i = 1
     while i <= niter
@@ -164,6 +165,15 @@ function UnconditionalSampler(
 end
 
 """
+    energy(sampler::UnconditionalSampler, model, x, y)
+
+Energy function for `UnconditionalSampler`.
+"""
+function energy(sampler::UnconditionalSampler, model, x, y)
+    return energy(model, x)
+end
+
+"""
     mcmc_samples(
         sampler::UnconditionalSampler,
         model, rule::Flux.Optimise.AbstractOptimiser,
@@ -178,11 +188,12 @@ function mcmc_samples(
     model,
     rule::Flux.Optimise.AbstractOptimiser,
     inp_samples::AbstractArray;
-    niter::Int
+    niter::Int,
+    y::Union{Nothing,Int}=nothing,
 )
 
     # Setup:
-    E(x) = energy(model, x)
+    E(x) = energy(sampler, model, x, nothing)
 
     # Training:
     i = 1
@@ -231,6 +242,15 @@ function JointSampler(
 end
 
 """
+    energy(sampler::JointSampler, model, x, y)
+
+Energy function for `JointSampler`.
+"""
+function energy(sampler::JointSampler, model, x, y)
+    return energy(model, x, y)
+end
+
+"""
     mcmc_samples(
         sampler::JointSampler,
         model, rule::Flux.Optimise.AbstractOptimiser,
@@ -245,11 +265,12 @@ function mcmc_samples(
     model,
     rule::Flux.Optimise.AbstractOptimiser,
     inp_samples::AbstractArray;
-    niter::Int
+    niter::Int,
+    y::Union{Nothing,Int}=nothing,
 )
 
     # Setup:
-    E(x, y) = energy(model, x, y)
+    E(x, y) = energy(sampler, model, x, y)
 
     # Training:
     i = 1

@@ -19,7 +19,7 @@ train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
 ```
 
 ```{julia}
-n_hidden = 64
+n_hidden = 5
 models = Dict(
     "Logistic Regression" => Chain(Dense(2, 3)),
     "MLP" => Chain(Dense(2, n_hidden, elu), Dense(n_hidden, 3)),
@@ -28,7 +28,7 @@ models = Dict(
 
 ```{julia}
 loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
-rule = Descent(0.1)
+rule = Adam()
 ```
 
 ```{julia}
@@ -59,7 +59,7 @@ plot(plts..., layout=(1, 2), size=(800, 400))
 sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=size(X)[1:end-1], batch_size=batch_size)
 jem = JointEnergyModel(models["MLP"], sampler)
 # Initialise training:
-opt = Descent()
+opt = Adam(1e-3)
 opt_state = Flux.setup(opt, jem)
 num_epochs = 50
 ```
@@ -68,8 +68,8 @@ num_epochs = 50
 logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
-    α=0.01,
-    use_class_loss=false,
+    α=0.1,
+    # use_class_loss=false,
     # use_gen_loss=false,
     # use_reg_loss=false,
 )

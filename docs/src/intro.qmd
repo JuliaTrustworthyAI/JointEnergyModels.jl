@@ -104,7 +104,7 @@ D = n_digits
 K = 10                      
 M = 32
 lr = 1e-3                
-num_epochs = 100
+num_epochs = 50
 max_patience = 5            
 batchsize = Int(round(nobs/10))
 ```
@@ -115,8 +115,8 @@ batchsize = Int(round(nobs/10))
 mlp = Chain(
     MLUtils.flatten,
     Dense(prod((D,D)), M, elu),
-    Dense(M, M, elu),
-    Dense(M, M, elu),
+    # Dense(M, M, elu),
+    # Dense(M, M, elu),
     Dense(M, K)
 )
 
@@ -128,7 +128,7 @@ jem = JointEnergyModel(mlp, sampler)
 ```
 
 ```{julia}
-n_iter = 100
+n_iter = 1000
 _w = 1500
 plts = []
 neach = 10
@@ -159,15 +159,18 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```{julia}
 logs = train_model(
     jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set,
-    verbosity = 50,
-    α = 0.1
+    verbosity = minimum([num_epochs, 50]),
+    α = 0.01,
+    # use_class_loss=false,
+    # use_gen_loss=false,
+    # use_reg_loss=false,
 )
 ```
 
 ### The final evaluation
 
 ```{julia}
-n_iter = 100
+n_iter = 1000
 _w = 1500
 plts = []
 neach = 10

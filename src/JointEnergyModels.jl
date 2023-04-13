@@ -23,4 +23,7 @@ export ConditionalSampler, UnconditionalSampler
 include("training.jl")
 export train_model
 
+include("mlj_flux.jl")
+export JointEnergyClassifier
+
 end

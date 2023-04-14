@@ -1,5 +1,6 @@
 using Flux: onecold
 using Flux.Data: DataLoader
+using StatsBase
 
 
 function accuracy(jem::JointEnergyModel, x, y; agg=mean)
@@ -47,6 +48,7 @@ function train_model(
 
             # Forward pass:
             x, y = data
+            println(y)
             val, grads = Flux.withgradient(jem) do m
                 JointEnergyModels.loss(
                     m, x, y; 

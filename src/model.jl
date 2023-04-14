@@ -2,6 +2,8 @@ using ChainRulesCore
 using Flux
 using Flux: logsumexp
 using Flux.Losses: logitcrossentropy
+using ..JointEnergyModels
+using StatsBase
 
 mutable struct JointEnergyModel
     chain::Union{Nothing,Chain}

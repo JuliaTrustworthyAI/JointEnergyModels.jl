@@ -1,11 +1,14 @@
+using ComputationalResources
 using Flux
 using MLJFlux
-import MMI as MMI
+import MLJModelInterface as MMI
+using Random
+using Tables
 
 const default_builder_jem = MLJFlux.MLP(hidden=(10, 10, 10,), σ=Flux.swish)
 
 "The `JointEnergyClassifier` struct is a wrapper for a `JointEnergyModel` that can be used with MLJFlux.jl."
-mutable struct JointEnergyClassifier <: MLJFlux.MLJFluxProbabilistic
+mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     builder::B
     finaliser::F
     optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
@@ -30,7 +33,7 @@ function JointEnergyClassifier(
     rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
-    kwargs...,
+    kwargs...
 ) where {B,F,O,L}
 
     # Initialise atomic JointEnergyModel:
@@ -56,8 +59,15 @@ end
 
 # builds the end-to-end Flux chain needed, given the `model` and `shape`:
 function MLJFlux.build(model::JointEnergyClassifier, rng, shape)
-    chain = Flux.Chain(build(model.builder, rng, shape...), model.finaliser)
+
+    # Chain:
+    chain = Flux.Chain(MLJFlux.build(model.builder, rng, shape...), model.finaliser)
     model.jem.chain = chain     # update the atomic model
+
+    # Sampler:
+    model.jem.sampler.input_size =
+        isnothing(model.jem.sampler.input_size) ? (shape[1],) : model.jem.sampler.input_size
+
     return chain
 end
 
@@ -79,6 +89,31 @@ function MMI.predict(
 end
 
 MMI.metadata_model(JointEnergyClassifier,
-    input=Union{AbstractArray,Table(Continuous)},
-    target=AbstractVector{<:Finite},
+    input=Union{AbstractArray,MMI.Table(MMI.Continuous)},
+    target=AbstractVector{<:MMI.Finite},
     path="MLJFlux.JointEnergyClassifier")
+
+function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, epochs, verbosity, X, y)
+
+    loss = model.loss
+
+    println("Hi")
+
+    # intitialize and start progress meter:
+    meter = Progress(epochs + 1, dt=0, desc="Optimising neural net:",
+        barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
+    verbosity != 1 || next!(meter)
+
+    # initiate training:
+    train_set = zip(X, y)
+    opt_state = Flux.setup(optimiser, model.jem)
+
+    history = train_model(
+        model.jem, train_set, opt_state;
+        num_epochs=model.epochs,
+        verbosity=model.epochs
+    )
+
+    return model.jem.chain, history
+
+end

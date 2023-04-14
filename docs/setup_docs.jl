@@ -3,7 +3,6 @@ setup_docs = quote
     using Pkg
     Pkg.activate("docs")
 
-
     using Distributions
     using Flux
     using Flux.Data: DataLoader
@@ -13,6 +12,7 @@ setup_docs = quote
     using JointEnergyModels
     using MLDatasets
     using MLJBase
+    using MLJFlux
     using Plots
     using Plots.PlotMeasures
     using Random

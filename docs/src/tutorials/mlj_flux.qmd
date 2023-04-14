@@ -1,0 +1,34 @@
+# Compatibility with `MLJFlux`
+
+```{julia}
+#| echo: false
+include("docs/setup_docs.jl")
+eval(setup_docs)
+```
+
+## Binary Classification
+
+```{julia}
+nobs=2000
+X, y = make_circles(nobs, noise=0.1, factor=0.5)
+Xplot = Float32.(permutedims(matrix(X)))
+X = table(permutedims(Xplot))
+display(scatter(Xplot[1,:], Xplot[2,:], group=y, label=""))
+batch_size = Int(round(nobs/10))
+```
+
+```{julia}
+𝒟x = Normal()
+𝒟y = Categorical(ones(2) ./ 2)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=size(Xplot)[1:end-1])
+clf = JointEnergyClassifier(sampler)
+```
+
+```{julia}
+println(typeof(clf) <: MLJFlux.MLJFluxModel)
+```
+
+```{julia}
+mach = machine(clf, X, y)
+fit!(mach)
+```

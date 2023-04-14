@@ -5,8 +5,10 @@ using Flux
 using Flux.Optimise: apply!, Optimiser
 using ..JointEnergyModels
 using ..JointEnergyModels: AbstractSampler
+using StatsBase
 
 export ConditionalSampler, UnconditionalSampler
+export energy
 
 """
     (sampler::AbstractSampler)(
@@ -24,6 +26,8 @@ function (sampler::AbstractSampler)(
     kwargs...
 )
 
+    # Setup and assertions:
+    @assert !isnothing(sampler.input_size) "Sampler input size is not defined."
     n_samples = isnothing(n_samples) ? sampler.batch_size : n_samples
     inp_samples = Float32.(rand(sampler.𝒟x, sampler.input_size..., n_samples))
 
@@ -59,7 +63,7 @@ Generates conditional samples: $x \sim p(x|y).$
 mutable struct ConditionalSampler <: AbstractSampler
     𝒟x::Distribution
     𝒟y::Distribution
-    input_size::Dims
+    input_size::Union{Nothing,Dims}
     batch_size::Int
     buffer::AbstractArray
     max_len::Int
@@ -69,7 +73,7 @@ end
 """
     ConditionalSampler(
         𝒟x::Distribution, 𝒟y::Distribution;
-        input_size::Dims, batch_size::Int,
+        input_size::Union{Nothing,Dims, batch_size::Int,}
         max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
@@ -77,7 +81,7 @@ Outer constructor for `ConditionalSampler`.
 """
 function ConditionalSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Union{Nothing,Dims}=nothing, batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
@@ -90,8 +94,11 @@ end
 
 Energy function for `ConditionalSampler`.
 """
-function energy(sampler::ConditionalSampler, model, x, y)
-    return energy(model, x, y)
+function energy(sampler::ConditionalSampler, model, x, y; agg=mean)
+    ŷ = model(x)
+    E = 0.0
+    E = agg(map(_y -> -_y[y], eachslice(ŷ, dims=ndims(ŷ))))
+    return E
 end
 
 """
@@ -138,7 +145,7 @@ Generates unconditional samples: $x \sim p(x).$
 """
 mutable struct UnconditionalSampler <: AbstractSampler
     𝒟x::Distribution
-    input_size::Dims
+    input_size::Union{Nothing,Dims}
     batch_size::Int
     buffer::AbstractArray
     max_len::Int
@@ -148,7 +155,7 @@ end
 """
     UnconditionalSampler(
         𝒟x::Distribution;
-        input_size::Dims, batch_size::Int,
+        input_size::Union{Nothing,Dims}=nothing, batch_size::Int=1,
         max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
@@ -156,7 +163,7 @@ Outer constructor for `UnonditionalSampler`.
 """
 function UnconditionalSampler(
     𝒟x::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Union{Nothing,Dims}=nothing, batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
@@ -189,7 +196,7 @@ function mcmc_samples(
     rule::Flux.Optimise.AbstractOptimiser,
     inp_samples::AbstractArray;
     niter::Int,
-    y::Union{Nothing,Int}=nothing,
+    y::Union{Nothing,Int}=nothing
 )
 
     # Setup:
@@ -216,7 +223,7 @@ Generates unconditional samples by drawing directly from joint distribution: $x 
 mutable struct JointSampler <: AbstractSampler
     𝒟x::Distribution
     𝒟y::Distribution
-    input_size::Dims
+    input_size::Union{Nothing,Dims}
     batch_size::Int
     buffer::AbstractArray
     max_len::Int
@@ -225,7 +232,8 @@ end
 
 """
     JointSampler(
-        𝒟x::Distribution, 𝒟y::Distribution, input_size::Dims, batch_size::Int;
+        𝒟x::Distribution, 𝒟y::Distribution;
+        input_size::Union{Nothing,Dims}=nothing, batch_size::Int=1,
         max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
@@ -233,7 +241,7 @@ Outer constructor for `JointSampler`.
 """
 function JointSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Union{Nothing,Dims}=nothing, batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
@@ -266,7 +274,7 @@ function mcmc_samples(
     rule::Flux.Optimise.AbstractOptimiser,
     inp_samples::AbstractArray;
     niter::Int,
-    y::Union{Nothing,Int}=nothing,
+    y::Union{Nothing,Int}=nothing
 )
 
     # Setup:

@@ -2,7 +2,7 @@
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "2f0ee601d177cf025a39b0a0d6d5dddf0d9588f6"
+project_hash = "e038681c27a4f2a2950927b6e53a1abcb82d4994"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -920,7 +920,7 @@ uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 version = "1.12.0"
 
 [[deps.JointEnergyModels]]
-deps = ["ChainRulesCore", "Distributions", "Flux", "StatsBase"]
+deps = ["ChainRulesCore", "ComputationalResources", "Distributions", "Flux", "MLJFlux", "MLJModelInterface", "ProgressMeter", "Random", "StatsBase", "Tables"]
 path = ".."
 uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
 version = "0.1.0"
@@ -1137,7 +1137,7 @@ version = "0.21.8"
 
 [[deps.MLJFlux]]
 deps = ["CategoricalArrays", "ColorTypes", "ComputationalResources", "Flux", "MLJModelInterface", "Metalhead", "ProgressMeter", "Random", "Statistics", "Tables"]
-git-tree-sha1 = "2ecdce4dd9214789ee1796103d29eaee7619ebd0"
+path = "../../MLJFlux.jl"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 version = "0.2.9"
 

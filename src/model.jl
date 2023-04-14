@@ -32,9 +32,7 @@ Computes the classification loss.
 """
 function class_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    ℓ = map(eachcol(ŷ), eachcol(y)) do ŷi, yi
-        logitcrossentropy(ŷi, yi)
-    end
+    ℓ = logitcrossentropy(ŷ, y)
     return ℓ
 end
 
@@ -45,25 +43,25 @@ Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    xsample = []
-    ignore_derivatives() do
-        _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
-        push!(xsample, _xsample)
-    end
+    xsample = selectdim(
+        jem.sampler.buffer, 
+        ndims(jem.sampler.buffer), 
+        1:size(ŷ)[2]
+    )
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
-    ℓ = E(x) .- E(xsample...)
+    ℓ = E(x) .- E(xsample)
     return ℓ
 end
 
 function reg_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    xsample = []
-    ignore_derivatives() do
-        _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
-        push!(xsample, _xsample)
-    end
+    xsample = selectdim(
+        jem.sampler.buffer,
+        ndims(jem.sampler.buffer),
+        1:size(ŷ)[2]
+    )
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
-    ℓ = E(x).^2 .+ E(xsample...).^2
+    ℓ = E(x) .^ 2 .+ E(xsample) .^ 2
     return ℓ
 end
 
@@ -79,6 +77,15 @@ function loss(
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true
 )
+
+    if use_gen_loss || use_class_loss
+        ŷ = jem(x)
+        xsample = []
+        ignore_derivatives() do
+            _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
+            push!(xsample, _xsample)
+        end
+    end
     ℓ_clf = use_class_loss ? class_loss(jem, x, y) : 0.0
     ℓ_gen = use_gen_loss ? gen_loss(jem, x, y) : 0.0
     ℓ_reg = use_reg_loss ? reg_loss(jem, x, y) : 0.0

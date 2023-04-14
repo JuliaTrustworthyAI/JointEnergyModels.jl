@@ -6,8 +6,8 @@ using ProgressMeter
 abstract type AbstractSamplingRule <: Flux.Optimise.AbstractOptimiser end
 abstract type AbstractSampler end
 
-# include("utils.jl")
-# export energy
+include("utils.jl")
+export _energy
 
 include("Samplers.jl")
 using .Samplers

@@ -48,7 +48,6 @@ function train_model(
 
             # Forward pass:
             x, y = data
-            println(y)
             val, grads = Flux.withgradient(jem) do m
                 JointEnergyModels.loss(
                     m, x, y; 

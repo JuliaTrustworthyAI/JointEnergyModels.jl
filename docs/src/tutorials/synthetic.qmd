@@ -10,7 +10,7 @@ eval(setup_docs)
 
 ```{julia}
 nobs=2000
-X, y = make_moons(nobs, noise=0.1)
+X, y = make_circles(nobs, noise=0.1, factor=0.5)
 X = Float32.(permutedims(matrix(X)))
 y_labels = Int.(y.refs)
 y = Flux.onehotbatch(y.refs, sort(unique(y_labels)))
@@ -73,7 +73,7 @@ jem = JointEnergyModel(
 # Initialise training:
 opt = Adam(1e-3)
 opt_state = Flux.setup(opt, jem)
-num_epochs = 500
+num_epochs = 100
 ```
 
 ```{julia}
@@ -81,6 +81,7 @@ logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
     α=1e-1,
+    verbosity=minimum([num_epochs, 50])
     # use_class_loss=false,
     # use_gen_loss=false,
     # use_reg_loss=false,
@@ -110,7 +111,7 @@ if typeof(jem.sampler) <: ConditionalSampler
     
     plts = []
     for target in 1:size(y,1)
-        X̂ = generate_conditional_samples(jem, batch_size*5, target; niter=1000) 
+        X̂ = generate_conditional_samples(jem, batch_size, target; niter=1000) 
         ex = extrema(hcat(X,X̂), dims=2)
         xlims = ex[1]
         ylims = ex[2]
@@ -127,7 +128,7 @@ if typeof(jem.sampler) <: ConditionalSampler
             X̂[1,:], X̂[2,:], 
             color=repeat([target], size(X̂,2)), 
             group=repeat([target], size(X̂,2)), 
-            title="Generated Samples", shape=:star5, ms=10
+            shape=:star5, ms=10
         )
         push!(plts, plt)
     end

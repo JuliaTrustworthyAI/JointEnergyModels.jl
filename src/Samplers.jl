@@ -7,6 +7,7 @@ using ..JointEnergyModels
 using ..JointEnergyModels: AbstractSampler
 
 export ConditionalSampler, UnconditionalSampler
+export energy
 
 """
     (sampler::AbstractSampler)(
@@ -91,7 +92,7 @@ end
 Energy function for `ConditionalSampler`.
 """
 function energy(sampler::ConditionalSampler, model, x, y)
-    return energy(model, x, y)
+    return _energy(model, x, y)
 end
 
 """

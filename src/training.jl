@@ -8,7 +8,7 @@ function accuracy(jem::JointEnergyModel, x, y; agg=mean)
     agg(onecold(ŷ) .== onecold(y))
 end
 
-function evaluation(jem::JointEnergyModel, val_set::DataLoader)
+function evaluation(jem::JointEnergyModel, val_set::Union{DataLoader,Base.Iterators.Zip})
     ℓ = 0.0
     ℓ_clf = 0.0
     ℓ_gen = 0.0
@@ -49,13 +49,14 @@ function train_model(
             # Forward pass:
             x, y = data
             val, grads = Flux.withgradient(jem) do m
-                JointEnergyModels.loss(
+                _loss = JointEnergyModels.loss(
                     m, x, y; 
                     use_class_loss=use_class_loss, 
                     use_gen_loss=use_gen_loss, 
                     use_reg_loss=use_reg_loss,
                     α=α,
                 )
+                return _loss
             end
 
             # Save the loss from the forward pass. (Done outside of gradient.)

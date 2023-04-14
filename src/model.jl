@@ -81,8 +81,8 @@ function loss(
     ℓ_clf = use_class_loss ? class_loss(jem, x, y) : 0.0
     ℓ_gen = use_gen_loss ? gen_loss(jem, x, y) : 0.0
     ℓ_reg = use_reg_loss ? reg_loss(jem, x, y) : 0.0
-    loss = agg(ℓ_clf .+ ℓ_gen .+ α * ℓ_reg)
-    return loss
+    _loss = agg(ℓ_clf .+ ℓ_gen .+ α * ℓ_reg)
+    return _loss
 end
 
 """

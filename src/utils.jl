@@ -7,6 +7,7 @@ Computes the energy for unconditional samples $x \sim p_{\theta}(x)$: $E(x)=-\te
 """
 function _energy(f, x; agg=mean)
     ŷ = f(x)
+    E = 0.0
     E = agg(map(y -> -logsumexp(y), eachslice(ŷ, dims=ndims(ŷ))))
     return E
 end

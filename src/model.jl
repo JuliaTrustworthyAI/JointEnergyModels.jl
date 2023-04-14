@@ -1,7 +1,6 @@
 using ChainRulesCore
 using Flux
 using Flux: logsumexp
-using Flux.Losses: logitcrossentropy
 using ..JointEnergyModels
 using StatsBase
 
@@ -33,7 +32,9 @@ Computes the classification loss.
 """
 function class_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    ℓ = logitcrossentropy(ŷ, y; agg=x -> x)
+    ℓ = map(eachcol(ŷ), eachcol(y)) do ŷi, yi
+        logitcrossentropy(ŷi, yi)
+    end
     return ℓ
 end
 

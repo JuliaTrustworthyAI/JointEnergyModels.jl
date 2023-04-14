@@ -110,7 +110,6 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
         model.jem, train_set, opt_state;
         num_epochs=model.epochs,
         verbosity=model.epochs,
-        use_class_loss=false
     )
 
     return model.jem.chain, history

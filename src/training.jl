@@ -35,7 +35,7 @@ function train_model(
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
-    α::Float64=0.1,
+    α::Float64=0.01,
 )
     training_log = []
     not_finite_counter = 0

@@ -42,11 +42,6 @@ Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    # xsample = []
-    # ignore_derivatives() do
-    #     _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
-    #     push!(xsample, _xsample)
-    # end
     xsample = selectdim(
         jem.sampler.buffer, 
         ndims(jem.sampler.buffer), 
@@ -59,13 +54,13 @@ end
 
 function reg_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
-    xsample = []
-    ignore_derivatives() do
-        _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
-        push!(xsample, _xsample)
-    end
+    xsample = selectdim(
+        jem.sampler.buffer,
+        ndims(jem.sampler.buffer),
+        1:size(ŷ)[2]
+    )
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
-    ℓ = E(x).^2 .+ E(xsample...).^2
+    ℓ = E(x) .^ 2 .+ E(xsample) .^ 2
     return ℓ
 end
 

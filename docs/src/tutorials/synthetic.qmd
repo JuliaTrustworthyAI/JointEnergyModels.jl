@@ -81,7 +81,7 @@ logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
     α=1e-1,
-    verbosity=minimum([num_epochs, 50])
+    verbosity=minimum([num_epochs, 50]),
     # use_class_loss=false,
     # use_gen_loss=false,
     # use_reg_loss=false,

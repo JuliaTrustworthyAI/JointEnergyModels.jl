@@ -24,4 +24,7 @@ export SGLD, ImproperSGLD
 include("training.jl")
 export train_model
 
+include("mlj_flux.jl")
+export JointEnergyClassifier
+
 end

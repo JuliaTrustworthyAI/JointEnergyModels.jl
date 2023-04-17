@@ -13,6 +13,7 @@ setup_docs = quote
     using JointEnergyModels
     using MLDatasets
     using MLJBase
+    using MLJFlux
     using Plots
     using Plots.PlotMeasures
     using Random

@@ -25,7 +25,7 @@ clf = JointEnergyClassifier(sampler)
 ```
 
 ```{julia}
-println(typeof(clf) <: MLJFlux.MLJFluxModel)
+# println(typeof(clf) <: MLJFlux.MLJFluxModel)
 ```
 
 ```{julia}

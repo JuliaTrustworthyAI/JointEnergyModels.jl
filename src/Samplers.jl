@@ -78,7 +78,7 @@ Outer constructor for `ConditionalSampler`.
 """
 function ConditionalSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Dims, batch_size::Int=1,
     max_len::Int=1000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"

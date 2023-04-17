@@ -4,14 +4,14 @@ using Flux: logsumexp
 using Flux.Losses: logitcrossentropy
 
 struct JointEnergyModel
-    chain::Chain
+    chain::Union{Nothing,Chain}
     sampler::AbstractSampler
     sampling_rule::AbstractSamplingRule
     sampling_steps::Int
 end
 
 function JointEnergyModel(
-    chain::Chain, sampler::AbstractSampler;
+    chain::Union{Chain,Nothing}, sampler::AbstractSampler;
     sampling_rule=ImproperSGLD(),
     sampling_steps=sampling_rule isa ImproperSGLD ? 20 : 1000
 )

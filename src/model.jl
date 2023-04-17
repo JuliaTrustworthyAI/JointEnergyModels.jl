@@ -1,6 +1,5 @@
 using ChainRulesCore
 using Flux
-using Flux: logsumexp
 using Flux.Losses: logitcrossentropy
 
 struct JointEnergyModel
@@ -13,7 +12,7 @@ end
 function JointEnergyModel(
     chain::Union{Chain,Nothing}, sampler::AbstractSampler;
     sampling_rule=ImproperSGLD(),
-    sampling_steps=sampling_rule isa ImproperSGLD ? 20 : 1000
+    sampling_steps=sampling_rule isa ImproperSGLD ? 10 : 1000
 )
     JointEnergyModel(chain, sampler, sampling_rule, sampling_steps)
 end
@@ -29,9 +28,9 @@ end
 
 Computes the classification loss.
 """
-function class_loss(jem::JointEnergyModel, x, y)
+function class_loss(jem::JointEnergyModel, x, y; loss_fun=logitcrossentropy)
     ŷ = jem(x)
-    ℓ = logitcrossentropy(ŷ, y)
+    ℓ = loss_fun(ŷ, y)
     return ℓ
 end
 
@@ -74,7 +73,8 @@ function loss(
     agg=mean, α=0.1,
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
-    use_reg_loss::Bool=true
+    use_reg_loss::Bool=true,
+    class_loss_fun::Function=logitcrossentropy,
 )
 
     if use_gen_loss || use_class_loss
@@ -85,7 +85,8 @@ function loss(
             push!(xsample, _xsample)
         end
     end
-    ℓ_clf = use_class_loss ? class_loss(jem, x, y) : 0.0
+
+    ℓ_clf = use_class_loss ? class_loss(jem, x, y; loss_fun=class_loss_fun) : 0.0
     ℓ_gen = use_gen_loss ? gen_loss(jem, x, y) : 0.0
     ℓ_reg = use_reg_loss ? reg_loss(jem, x, y) : 0.0
     loss = agg(ℓ_clf .+ ℓ_gen .+ α * ℓ_reg)

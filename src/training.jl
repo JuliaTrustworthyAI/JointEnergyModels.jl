@@ -7,7 +7,7 @@ function accuracy(jem::JointEnergyModel, x, y; agg=mean)
     agg(onecold(ŷ) .== onecold(y))
 end
 
-function evaluation(jem::JointEnergyModel, val_set::DataLoader)
+function evaluation(jem::JointEnergyModel, val_set::Union{DataLoader,Base.Iterators.Zip})
     ℓ = 0.0
     ℓ_clf = 0.0
     ℓ_gen = 0.0
@@ -28,13 +28,13 @@ end
 function train_model(
     jem::JointEnergyModel, train_set, opt_state;
     num_epochs::Int=100, 
-    val_set::Union{Nothing,DataLoader}=nothing, 
+    val_set::Union{Nothing,DataLoader,Base.Iterators.Zip}=nothing, 
     max_patience::Int=10,
     verbosity::Int=num_epochs,
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
-    α::Float64=0.1,
+    α::Float64=1e-1,
 )
     training_log = []
     not_finite_counter = 0

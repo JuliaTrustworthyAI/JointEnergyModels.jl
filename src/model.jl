@@ -4,7 +4,7 @@ using Flux: logsumexp
 using Flux.Losses: logitcrossentropy
 
 struct JointEnergyModel
-    chain::Union{Nothing,Chain}
+    chain::Chain
     sampler::AbstractSampler
     sampling_rule::AbstractSamplingRule
     sampling_steps::Int

@@ -2,10 +2,11 @@ using ComputationalResources
 using Flux
 using MLJFlux
 import MLJModelInterface as MMI
+using ProgressMeter
 using Random
 using Tables
 
-const default_builder_jem = MLJFlux.MLP(hidden=(10, 10, 10,), σ=Flux.swish)
+const default_builder_jem = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.swish)
 
 "The `JointEnergyClassifier` struct is a wrapper for a `JointEnergyModel` that can be used with MLJFlux.jl."
 mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
@@ -20,7 +21,8 @@ mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     rng::Union{AbstractRNG,Int64}
     optimiser_changes_trigger_retraining::Bool
     acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-    jem::JointEnergyModel
+    sampler::AbstractSampler
+    jem::Union{Nothing,JointEnergyModel}
 end
 
 function JointEnergyClassifier(
@@ -36,13 +38,10 @@ function JointEnergyClassifier(
     kwargs...
 ) where {B,F,O,L}
 
-    # Initialise atomic JointEnergyModel:
-    jem = JointEnergyModel(nothing, sampler, kwargs...)
-
     # Initialise the MLJFlux wrapper:
     mlj_jem = JointEnergyClassifier(
         builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration, jem,
+        optimiser_changes_trigger_retraining, acceleration, sampler, nothing,
     )
 
     return mlj_jem
@@ -62,11 +61,16 @@ function MLJFlux.build(model::JointEnergyClassifier, rng, shape)
 
     # Chain:
     chain = Flux.Chain(MLJFlux.build(model.builder, rng, shape...), model.finaliser)
-    model.jem.chain = chain     # update the atomic model
 
     # Sampler:
-    model.jem.sampler.input_size =
-        isnothing(model.jem.sampler.input_size) ? (shape[1],) : model.jem.sampler.input_size
+    model.sampler.input_size =
+        isnothing(model.sampler.input_size) ? (shape[1],) : model.sampler.input_size
+
+    # JointEnergyModel:
+    model.jem = JointEnergyModel(
+        chain,
+        model.sampler,
+    )
 
     return chain
 end

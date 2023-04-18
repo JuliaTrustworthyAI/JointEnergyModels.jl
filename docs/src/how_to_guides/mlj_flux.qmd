@@ -27,6 +27,7 @@ clf = JointEnergyClassifier(
     batch_size=batch_size,
     finaliser=x -> x,
     loss=Flux.Losses.logitcrossentropy,
+    jem_training_params=(α=0.01,)
 )
 ```
 

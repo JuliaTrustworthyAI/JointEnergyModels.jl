@@ -14,6 +14,7 @@ setup_docs = quote
     using MLDatasets
     using MLJBase
     using MLJFlux
+    using MLUtils
     using Plots
     using Plots.PlotMeasures
     using Random

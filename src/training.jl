@@ -12,6 +12,7 @@ function evaluation(
     jem::JointEnergyModel, 
     val_set::Union{DataLoader,Base.Iterators.Zip};
     class_loss_fun::Function=logitcrossentropy,
+    α::Float64=1e-1,
 )
     ℓ = 0.0
     ℓ_clf = 0.0
@@ -23,7 +24,7 @@ function evaluation(
         ℓ_clf += sum(JointEnergyModels.class_loss(jem, x, y; loss_fun=class_loss_fun))
         ℓ_gen += sum(JointEnergyModels.gen_loss(jem, x, y))
         ℓ_reg += sum(JointEnergyModels.reg_loss(jem, x, y))
-        ℓ += JointEnergyModels.loss(jem, x, y; class_loss_fun=class_loss_fun)
+        ℓ += JointEnergyModels.loss(jem, x, y; class_loss_fun=class_loss_fun, α=α,)
         acc += accuracy(jem, x, y)
         num += size(x)[end]
     end
@@ -86,10 +87,10 @@ function train_model(
 
         # Evaluation:
         if !isnothing(val_set)
-            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, val_set; class_loss_fun=class_loss_fun)
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, val_set; class_loss_fun=class_loss_fun, α=α,)
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         else
-            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, train_set; class_loss_fun=class_loss_fun)
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, train_set; class_loss_fun=class_loss_fun, α=α,)
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         end
 

@@ -23,6 +23,7 @@ mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     sampler::AbstractSampler
     jem::Union{Nothing,JointEnergyModel}
+    jem_training_params::NamedTuple
 end
 
 function JointEnergyClassifier(
@@ -35,13 +36,14 @@ function JointEnergyClassifier(
     rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
+    jem_training_params::NamedTuple=(verbosity=epochs,num_epochs=epochs,),
     kwargs...
 ) where {B,F,O,L}
 
     # Initialise the MLJFlux wrapper:
     mlj_jem = JointEnergyClassifier(
         builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration, sampler, nothing,
+        optimiser_changes_trigger_retraining, acceleration, sampler, nothing, jem_training_params,
     )
 
     return mlj_jem
@@ -112,9 +114,8 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
 
     history = train_model(
         model.jem, train_set, opt_state;
-        num_epochs=model.epochs,
-        verbosity=model.epochs,
-        class_loss_fun=loss
+        class_loss_fun=loss,
+        model.jem_training_params...,
     )
 
     return model.jem.chain, history

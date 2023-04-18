@@ -61,22 +61,6 @@ function accuracy(model::JointEnergyModel, x, y; agg=mean)
     mean(onecold(ŷ) .== onecold(y))
 end
 
-function evaluation(model::JointEnergyModel, val_set::DataLoader)
-    ℓ = 0.0
-    ℓ_clf = 0.0
-    ℓ_gen = 0.0
-    acc = 0.0
-    num = 0
-    for (x, y) in val_set
-        ℓ_clf += sum(JointEnergyModels.class_loss(model, x, y))
-        ℓ_gen += sum(JointEnergyModels.gen_loss(model, x))
-        ℓ += JointEnergyModels.loss(model, x, y)
-        acc += accuracy(model, x, y)
-        num += size(x)[end]
-    end
-    return ℓ / num, ℓ_clf / num, ℓ_gen / num, acc / length(val_set)
-end
-
 function samples_real(model::JointEnergyModel, dl::DataLoader, n::Int=16; img_size=n_digits * 5)
     x = reduce((x, y) -> cat(x,y[1],dims=ndims(x)), dl, init = [])
     num_x = Int(round(ceil(sqrt(n))))
@@ -123,7 +107,7 @@ mlp = Chain(
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = UnconditionalSampler(𝒟x, input_size=(D,D), batch_size=batch_size)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,D), batch_size=batch_size)
 jem = JointEnergyModel(mlp, sampler)
 ```
 

@@ -24,6 +24,7 @@ mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     sampler::AbstractSampler
     jem::Union{Nothing,JointEnergyModel}
     jem_training_params::NamedTuple
+    sampling_steps::Union{Nothing,Int}
 end
 
 function JointEnergyClassifier(
@@ -37,13 +38,13 @@ function JointEnergyClassifier(
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
     jem_training_params::NamedTuple=(verbosity=epochs,num_epochs=epochs,),
-    kwargs...
+    sampling_steps::Union{Nothing,Int}=nothing,
 ) where {B,F,O,L}
 
     # Initialise the MLJFlux wrapper:
     mlj_jem = JointEnergyClassifier(
         builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration, sampler, nothing, jem_training_params,
+        optimiser_changes_trigger_retraining, acceleration, sampler, nothing, jem_training_params, sampling_steps
     )
 
     return mlj_jem
@@ -69,10 +70,18 @@ function MLJFlux.build(model::JointEnergyClassifier, rng, shape)
         isnothing(model.sampler.input_size) ? (shape[1],) : model.sampler.input_size
 
     # JointEnergyModel:
-    model.jem = JointEnergyModel(
-        chain,
-        model.sampler,
-    )
+    if isnothing(model.sampling_steps)
+        model.jem = JointEnergyModel(
+            chain,
+            model.sampler,
+        )
+    else
+        model.jem = JointEnergyModel(
+            chain,
+            model.sampler;
+            sampling_steps=model.sampling_steps,
+        )
+    end
 
     return chain
 end
@@ -89,8 +98,8 @@ function MMI.predict(
     Xnew
 )
     chain, levels = fitresult
-    X = reformat(Xnew)
-    probs = vcat([chain(tomat(X[:, i]))' for i in 1:size(X, 2)]...)
+    X = MLJFlux.reformat(Xnew)
+    probs = vcat([chain(MLJFlux.tomat(X[:, i]))' for i in 1:size(X, 2)]...)
     return MMI.UnivariateFinite(levels, probs)
 end
 

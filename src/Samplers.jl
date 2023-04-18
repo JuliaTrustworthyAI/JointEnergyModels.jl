@@ -71,7 +71,7 @@ end
     ConditionalSampler(
         𝒟x::Distribution, 𝒟y::Distribution;
         input_size::Dims, batch_size::Int,
-        max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+        max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
 Outer constructor for `ConditionalSampler`.
@@ -79,7 +79,7 @@ Outer constructor for `ConditionalSampler`.
 function ConditionalSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
     input_size::Dims, batch_size::Int=1,
-    max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+    max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
@@ -150,7 +150,7 @@ end
     UnconditionalSampler(
         𝒟x::Distribution;
         input_size::Dims, batch_size::Int,
-        max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+        max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
 Outer constructor for `UnonditionalSampler`.
@@ -158,7 +158,7 @@ Outer constructor for `UnonditionalSampler`.
 function UnconditionalSampler(
     𝒟x::Distribution;
     input_size::Dims, batch_size::Int,
-    max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+    max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
@@ -227,7 +227,7 @@ end
 """
     JointSampler(
         𝒟x::Distribution, 𝒟y::Distribution, input_size::Dims, batch_size::Int;
-        max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+        max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
 Outer constructor for `JointSampler`.
@@ -235,7 +235,7 @@ Outer constructor for `JointSampler`.
 function JointSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
     input_size::Dims, batch_size::Int,
-    max_len::Int=1000, prob_buffer::AbstractFloat=0.95
+    max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))

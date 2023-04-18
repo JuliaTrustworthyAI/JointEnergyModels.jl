@@ -24,7 +24,7 @@ setup_docs = quote
     theme(:wong)
     Random.seed!(2023)
     www_path = "docs/src/www"
-    include("docs/src/utils.jl")
+    include("docs/src/utils/utils.jl")
     ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
 end;

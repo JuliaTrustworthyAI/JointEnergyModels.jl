@@ -12,7 +12,7 @@ function evaluation(
     jem::JointEnergyModel, 
     val_set::Union{DataLoader,Base.Iterators.Zip};
     class_loss_fun::Function=logitcrossentropy,
-    α::Float64=1e-1,
+    α=[1.0,1.0,1e-1],
 )
     ℓ = 0.0
     ℓ_clf = 0.0
@@ -40,7 +40,7 @@ function train_model(
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
-    α::Float64=1e-1,
+    α=[1.0,1.0,1e-1],
     class_loss_fun::Function=logitcrossentropy,
     progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
 )

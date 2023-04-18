@@ -70,7 +70,7 @@ Computes the total loss.
 """
 function loss(
     jem::JointEnergyModel, x, y; 
-    agg=mean, α=0.1,
+    agg=mean, α=[1.0, 1.0, 0.1],
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
@@ -89,7 +89,7 @@ function loss(
     ℓ_clf = use_class_loss ? class_loss(jem, x, y; loss_fun=class_loss_fun) : 0.0
     ℓ_gen = use_gen_loss ? gen_loss(jem, x, y) : 0.0
     ℓ_reg = use_reg_loss ? reg_loss(jem, x, y) : 0.0
-    loss = agg(ℓ_clf .+ ℓ_gen .+ α * ℓ_reg)
+    loss = agg(α[1] * ℓ_clf .+ α[2] * ℓ_gen .+ α[3] * ℓ_reg)
     return loss
 end
 

@@ -115,6 +115,7 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
     history = train_model(
         model.jem, train_set, opt_state;
         class_loss_fun=loss,
+        progress_meter=meter,
         model.jem_training_params...,
     )
 

@@ -6,7 +6,7 @@ include("docs/setup_docs.jl")
 eval(setup_docs)
 ```
 
-## Binary Classification
+## Synthetic Data
 
 ```{julia}
 nobs=2000
@@ -27,7 +27,7 @@ clf = JointEnergyClassifier(
     batch_size=batch_size,
     finaliser=x -> x,
     loss=Flux.Losses.logitcrossentropy,
-    jem_training_params=(α=0.01,)
+    jem_training_params=(α=0.1,verbosity=5,),
 )
 ```
 
@@ -77,3 +77,6 @@ if typeof(jem.sampler) <: ConditionalSampler
     plot(plts..., layout=(1, size(y,1)), size=(size(y,1)*400, 400))
 end
 ```
+
+## MNIST Data
+

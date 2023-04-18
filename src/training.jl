@@ -1,7 +1,7 @@
 using Flux: onecold
 using Flux.Data: DataLoader
 using Flux.Losses: logitcrossentropy
-
+using ProgressMeter
 
 function accuracy(jem::JointEnergyModel, x, y; agg=mean)
     ŷ = jem(x)
@@ -42,9 +42,17 @@ function train_model(
     use_reg_loss::Bool=true,
     α::Float64=1e-1,
     class_loss_fun::Function=logitcrossentropy,
+    progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
 )
     training_log = []
     not_finite_counter = 0
+    if isnothing(progress_meter)
+        progress_meter = Progress(
+            num_epochs + 1, dt=0, desc="Optimising neural net:", 
+            barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:green
+        )
+        verbosity == 0 || next!(progress_meter)
+    end
 
     for epoch in 1:num_epochs
         training_losses = Float32[]
@@ -95,7 +103,9 @@ function train_model(
         end
 
         # Verbosity:
+        verbosity == 0 || next!(progress_meter)
         if (verbosity > 0) && (epoch % round(num_epochs / verbosity) == 0)
+            println("")
             if isnothing(val_set)
                 @info "Traning losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")

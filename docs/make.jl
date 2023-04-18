@@ -21,15 +21,15 @@ makedocs(;
         "🫣 Tutorials" => [
             "Overview" => "tutorials/index.md",
         ],
-        "🤓 Explanation" => [
-            "Overview" => "explanation/index.md",
-        ],
-        "🫡 How-To ..." => [
-            "Overview" => "how_to_guides/index.md",
-        ],
-        "🧐 Reference" => "reference.md",
-        "🛠 Contribute" => "contribute.md",
-        "📚 Additional Resources" => "assets/resources.md",
+        # "🤓 Explanation" => [
+        #     "Overview" => "explanation/index.md",
+        # ],
+        # "🫡 How-To ..." => [
+        #     "Overview" => "how_to_guides/index.md",
+        # ],
+        # "🧐 Reference" => "reference.md",
+        # "🛠 Contribute" => "contribute.md",
+        # "📚 Additional Resources" => "assets/resources.md",
     ]
 )
 

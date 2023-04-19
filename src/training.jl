@@ -12,6 +12,9 @@ function evaluation(
     jem::JointEnergyModel, 
     val_set::Union{DataLoader,Base.Iterators.Zip};
     class_loss_fun::Function=logitcrossentropy,
+    use_class_loss::Bool=true, 
+    use_gen_loss::Bool=true, 
+    use_reg_loss::Bool=true,
     α=[1.0,1.0,1e-1],
 )
     ℓ = 0.0
@@ -24,7 +27,13 @@ function evaluation(
         ℓ_clf += sum(JointEnergyModels.class_loss(jem, x, y; loss_fun=class_loss_fun))
         ℓ_gen += sum(JointEnergyModels.gen_loss(jem, x, y))
         ℓ_reg += sum(JointEnergyModels.reg_loss(jem, x, y))
-        ℓ += JointEnergyModels.loss(jem, x, y; class_loss_fun=class_loss_fun, α=α,)
+        ℓ += JointEnergyModels.loss(
+            jem, x, y; 
+            use_class_loss=use_class_loss, 
+            use_gen_loss=use_gen_loss, 
+            use_reg_loss=use_reg_loss,
+            class_loss_fun=class_loss_fun, α=α,
+        )
         acc += accuracy(jem, x, y)
         num += size(x)[end]
     end
@@ -48,7 +57,7 @@ function train_model(
     not_finite_counter = 0
     if isnothing(progress_meter)
         progress_meter = Progress(
-            num_epochs + 1, dt=0, desc="Optimising neural net:", 
+            num_epochs, dt=0, desc="Optimising neural net:", 
             barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:green
         )
         verbosity == 0 || next!(progress_meter)
@@ -95,10 +104,22 @@ function train_model(
 
         # Evaluation:
         if !isnothing(val_set)
-            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, val_set; class_loss_fun=class_loss_fun, α=α,)
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(
+                jem, val_set; 
+                use_class_loss=use_class_loss, 
+                use_gen_loss=use_gen_loss, 
+                use_reg_loss=use_reg_loss,
+                class_loss_fun=class_loss_fun, α=α,
+            )
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         else
-            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(jem, train_set; class_loss_fun=class_loss_fun, α=α,)
+            ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(
+                jem, train_set; 
+                use_class_loss=use_class_loss, 
+                use_gen_loss=use_gen_loss, 
+                use_reg_loss=use_reg_loss,
+                class_loss_fun=class_loss_fun, α=α,
+            )
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         end
 

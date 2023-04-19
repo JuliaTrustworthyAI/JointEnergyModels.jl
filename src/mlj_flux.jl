@@ -113,7 +113,7 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
     loss = model.loss
 
     # intitialize and start progress meter:
-    meter = Progress(epochs + 1, dt=0, desc="Optimising neural net:",
+    meter = Progress(epochs, dt=0, desc="Optimising neural net:",
         barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
 
@@ -125,6 +125,7 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
         model.jem, train_set, opt_state;
         class_loss_fun=loss,
         progress_meter=meter,
+        num_epochs=model.epochs,
         model.jem_training_params...,
     )
 

@@ -10,7 +10,7 @@ eval(setup_docs)
 ## Data
 
 ```{julia}
-nobs = 1000
+nobs = 10000
 n_digits = 28
 Xtrain, ytrain, Xval, yval, Xtest, ytest = load_mnist_data(nobs=nobs, n_digits=n_digits)
 ```
@@ -32,12 +32,15 @@ batchsize = Int(round(nobs/10))
 ### Initializing the model
 
 ```{julia}
+activation = relu
 mlp = Chain(
     MLUtils.flatten,
-    Dense(prod((D,D)), M, swish),
-    # Dense(M, M, elu),
-    # Dense(M, M, elu),
-    Dense(M, K)
+    Dense(prod((D,D)), M),
+    BatchNorm(M, activation),
+    Dense(M, M),
+    BatchNorm(M, activation),
+    Dense(M, K),
+    BatchNorm(K)
 )
 
 # We initialize the full model
@@ -79,11 +82,11 @@ test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```{julia}
 logs = train_model(
     jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set,
-    verbosity = minimum([num_epochs, 50]),
-    α = 1e-2,
+    verbosity = minimum([num_epochs, 10]),
+    α = [1.0,1.0,1e-1],
     # use_class_loss=false,
-    # use_gen_loss=false,
-    # use_reg_loss=false,
+    use_gen_loss=false,
+    use_reg_loss=false,
 )
 ```
 

@@ -171,7 +171,7 @@ end
 Energy function for `UnconditionalSampler`.
 """
 function energy(sampler::UnconditionalSampler, model, x, y)
-    return energy(model, x)
+    return _energy(model, x)
 end
 
 """
@@ -248,7 +248,7 @@ end
 Energy function for `JointSampler`.
 """
 function energy(sampler::JointSampler, model, x, y)
-    return energy(model, x, y)
+    return _energy(model, x, y)
 end
 
 """

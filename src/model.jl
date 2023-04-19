@@ -41,10 +41,11 @@ Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
+    size_sample = minimum([size(ŷ)[2], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
     xsample = selectdim(
         jem.sampler.buffer, 
         ndims(jem.sampler.buffer), 
-        1:size(ŷ)[2]
+        1:size_sample
     )
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .- E(xsample)
@@ -53,10 +54,11 @@ end
 
 function reg_loss(jem::JointEnergyModel, x, y)
     ŷ = jem(x)
+    size_sample = minimum([size(ŷ)[2], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
     xsample = selectdim(
         jem.sampler.buffer,
         ndims(jem.sampler.buffer),
-        1:size(ŷ)[2]
+        1:size_sample
     )
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .^ 2 .+ E(xsample) .^ 2
@@ -77,7 +79,7 @@ function loss(
     class_loss_fun::Function=logitcrossentropy,
 )
 
-    if use_gen_loss || use_class_loss
+    if use_gen_loss || use_reg_loss
         ŷ = jem(x)
         xsample = []
         ignore_derivatives() do

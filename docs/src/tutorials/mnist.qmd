@@ -22,7 +22,7 @@ Xtrain, ytrain, Xval, yval, Xtest, ytest = load_mnist_data(nobs=nobs, n_digits=n
 ```{julia}
 D = n_digits               
 K = 10                      
-M = 32
+M = 128
 lr = 1e-3                
 num_epochs = 100
 max_patience = 5            
@@ -35,8 +35,8 @@ batchsize = Int(round(nobs/10))
 activation = relu
 mlp = Chain(
     MLUtils.flatten,
-    Dense(prod((D,D)), M),
-    BatchNorm(M, activation),
+    Dense(prod((D,D)), M, activation),
+    # BatchNorm(M, activation),
     # Dense(M, M),
     # BatchNorm(M, activation),
     Dense(M, K),
@@ -95,7 +95,7 @@ logs = train_model(
 ### The final evaluation
 
 ```{julia}
-n_iter = 100
+n_iter = 1000
 _w = 1500
 plts = []
 neach = 10

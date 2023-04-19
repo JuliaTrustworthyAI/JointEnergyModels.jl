@@ -16,15 +16,17 @@ end
 function load_mnist_data(; nobs::Int=1000, n_digits::Int=1000)
     # Train Set:
     Xtrain, ytrain = MNIST(split=:train)[:]
-    Xtrain = Xtrain[:, :, 1:nobs]
+    end_train = minimum([nobs, size(Xtrain)[end]])
+    Xtrain = Xtrain[:, :, 1:end_train]
     Xtrain = mapslices(x -> _resize(x; size=(n_digits, n_digits)), Xtrain, dims=(1, 2))
-    ytrain = ytrain[1:nobs]
+    ytrain = ytrain[1:end_train]
 
     # Test Set:
     Xtest, ytest = MNIST(split=:test)[:]
-    Xtest = Xtest[:, :, 1:nobs]
+    end_test = minimum([nobs, size(Xtest)[end]])
+    Xtest = Xtest[:, :, 1:end_test]
     Xtest = mapslices(x -> _resize(x; size=(n_digits, n_digits)), Xtest, dims=(1, 2))
-    ytest = ytest[1:nobs]
+    ytest = ytest[1:end_test]
 
     ## One-hot-encode the labels
     ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)

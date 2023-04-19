@@ -40,26 +40,32 @@ end
 Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x, y)
-    ŷ = jem(x)
-    size_sample = minimum([size(ŷ)[2], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
+    size_sample = minimum([size(x)[end], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
+    if size_sample < size(x)[end]
+        x = selectdim(x, ndims(x), rand(1:size(x)[end], size_sample))
+    end
     xsample = selectdim(
         jem.sampler.buffer, 
         ndims(jem.sampler.buffer), 
         1:size_sample
     )
+    @assert size(xsample) == size(x) 
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .- E(xsample)
     return ℓ
 end
 
 function reg_loss(jem::JointEnergyModel, x, y)
-    ŷ = jem(x)
-    size_sample = minimum([size(ŷ)[2], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
+    size_sample = minimum([size(x)[end], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
+    if size_sample < size(x)[end]
+        x = selectdim(x, ndims(x), rand(1:size(x)[end], size_sample))
+    end
     xsample = selectdim(
         jem.sampler.buffer,
         ndims(jem.sampler.buffer),
         1:size_sample
     )
+    @assert size(xsample) == size(x)
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .^ 2 .+ E(xsample) .^ 2
     return ℓ
@@ -80,12 +86,13 @@ function loss(
 )
 
     if use_gen_loss || use_reg_loss
-        ŷ = jem(x)
         xsample = []
+        Flux.testmode!(jem.chain)
         ignore_derivatives() do
-            _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps, n_samples=size(ŷ)[2])
+            _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps)
             push!(xsample, _xsample)
         end
+        Flux.trainmode!(jem.chain)
     end
 
     ℓ_clf = use_class_loss ? class_loss(jem, x, y; loss_fun=class_loss_fun) : 0.0

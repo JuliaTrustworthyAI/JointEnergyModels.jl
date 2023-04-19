@@ -36,11 +36,13 @@ function (sampler::AbstractSampler)(
 
     # Perform MCMC sampling:
     rule = isnothing(clip_grads) ? rule : Optimiser(ClipValue(clip_grads), rule)
+    Flux.testmode!(model)
     inp_samples = mcmc_samples(
         sampler, model, rule, inp_samples;
         niter=niter,
         kwargs...
     )
+    Flux.trainmode!(model)
     inp_samples = Float32.(clamp.(inp_samples, minimum(sampler.𝒟x), maximum(sampler.𝒟x)))
 
     # Update buffer:

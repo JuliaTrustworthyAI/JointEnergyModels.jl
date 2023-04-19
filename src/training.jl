@@ -128,7 +128,7 @@ function train_model(
         if (verbosity > 0) && (epoch % round(num_epochs / verbosity) == 0)
             println("")
             if isnothing(val_set)
-                @info "Traning losses/accuracy in epoch $epoch:"
+                @info "Training losses/accuracy in epoch $epoch:"
                 println("Classification: $ℓ_clf")
                 println("Generative: $ℓ_gen")
                 println("Regularisation: $ℓ_reg")

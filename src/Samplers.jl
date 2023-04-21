@@ -5,6 +5,7 @@ using Flux
 using Flux.Optimise: apply!, Optimiser
 using ..JointEnergyModels
 using ..JointEnergyModels: AbstractSampler
+using MLUtils
 
 export ConditionalSampler, UnconditionalSampler
 export energy

@@ -83,7 +83,7 @@ end
 
 ```{julia}
 # Data:
-nobs = 1000
+nobs = 10000
 n_digits = 28
 Xtrain, ytrain, _, _, _, _ = load_mnist_data(nobs=nobs, n_digits=n_digits)
 Xtrain = table(permutedims(MLUtils.flatten(Xtrain)))
@@ -102,7 +102,7 @@ batch_size = Int(round(nobs/10))
 
 
 ```{julia}
-activation = Flux.elu
+activation = Flux.swish
 builder = MLJFlux.MLP(hidden=(M,M,M,), σ=activation)
 ```
 
@@ -111,7 +111,7 @@ builder = MLJFlux.MLP(hidden=(M,M,M,), σ=activation)
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,), batch_size=batch_size)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,), batch_size=100)
 clf = JointEnergyClassifier(
     sampler;
     builder=builder,

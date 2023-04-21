@@ -10,7 +10,7 @@ eval(setup_docs)
 ## Data
 
 ```{julia}
-nobs = 60000
+nobs = 1000
 n_digits = 28
 Xtrain, ytrain, Xval, yval, Xtest, ytest = load_mnist_data(nobs=nobs, n_digits=n_digits)
 ```
@@ -52,24 +52,6 @@ jem = JointEnergyModel(
 )
 ```
 
-```{julia}
-n_iter = 100
-_w = 1500
-plts = []
-neach = 10
-for i in 1:10
-    x = jem.sampler(jem.chain, jem.sampling_rule; niter=n_iter, n_samples=neach)
-    plts_i = []
-    for j in 1:size(x, 3)
-        xj = x[:,:,j]
-        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
-    end
-    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
-    plts = [plts..., plt]
-end
-plot(plts..., size=(_w,_w), layout=(10,1))
-```
-
 ### Training loop
 
 ```{julia}
@@ -95,7 +77,7 @@ logs = train_model(
 ### The final evaluation
 
 ```{julia}
-n_iter = 1000
+n_iter = 200
 _w = 1500
 plts = []
 neach = 10

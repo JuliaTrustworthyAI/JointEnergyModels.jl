@@ -7,8 +7,13 @@ Computes the energy for unconditional samples $x \sim p_{\theta}(x)$: $E(x)=-\te
 """
 function _energy(f, x; agg=mean)
     ŷ = f(x)
-    E = agg(map(y -> -logsumexp(y), eachslice(ŷ, dims=ndims(ŷ))))
-    return E
+    if ndims(ŷ) > 1
+        E = 0.0
+        E = agg(map(y -> -logsumexp(y), eachslice(ŷ, dims=ndims(ŷ))))
+        return E
+    else
+        return -logsumexp(ŷ)
+    end
 end
 
 @doc raw"""
@@ -18,9 +23,13 @@ Computes the energy for conditional samples $x \sim p_{\theta}(x|y)$: $E(x)=- f_
 """
 function _energy(f, x, y::Int; agg=mean)
     ŷ = f(x)
-    E = 0.0
-    E = agg(map(_y -> -_y[y], eachslice(ŷ, dims=ndims(ŷ))))
-    return E
+    if ndims(ŷ) > 1
+        E = 0.0
+        E = agg(map(_y -> -_y[y], eachslice(ŷ, dims=ndims(ŷ))))
+        return E
+    else
+        return -ŷ[y]
+    end
 end
 
 

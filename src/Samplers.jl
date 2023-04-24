@@ -159,7 +159,7 @@ Outer constructor for `UnonditionalSampler`.
 """
 function UnconditionalSampler(
     𝒟x::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Dims, batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
@@ -236,7 +236,7 @@ Outer constructor for `JointSampler`.
 """
 function JointSampler(
     𝒟x::Distribution, 𝒟y::Distribution;
-    input_size::Dims, batch_size::Int,
+    input_size::Dims, batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"

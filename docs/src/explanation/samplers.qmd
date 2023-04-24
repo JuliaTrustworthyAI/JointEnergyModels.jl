@@ -29,8 +29,8 @@ batch_size = 100
 ```{julia}
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = UnconditionalSampler(𝒟x; input_size=(D,), batch_size=batch_size)
-conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,), batch_size=batch_size)
+sampler = UnconditionalSampler(𝒟x; input_size=(D,))
+conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,))
 opt = ImproperSGLD()
 n_iter = 100
 ```

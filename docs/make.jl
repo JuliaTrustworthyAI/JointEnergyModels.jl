@@ -18,9 +18,9 @@ makedocs(;
     ),
     pages=[
         "🏠 Home" => "index.md",
-        "🫣 Tutorials" => [
-            "Overview" => "tutorials/index.md",
-        ],
+        # "🫣 Tutorials" => [
+        #     "Overview" => "tutorials/index.md",
+        # ],
         # "🤓 Explanation" => [
         #     "Overview" => "explanation/index.md",
         # ],

@@ -3,6 +3,7 @@ module JointEnergyModels
 using Flux
 abstract type AbstractSamplingRule <: Flux.Optimise.AbstractOptimiser end
 abstract type AbstractSampler end
+export AbstractSampler, AbstractSamplingRule
 
 include("utils.jl")
 export _energy

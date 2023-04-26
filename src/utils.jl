@@ -23,12 +23,13 @@ Computes the energy for conditional samples $x \sim p_{\theta}(x|y)$: $E(x)=- f_
 """
 function _energy(f, x, y::Int; agg=mean)
     ŷ = f(x)
+    _E(y,idx) = length(y) > 1 ? -y[idx] : (idx == 2 ? -y[1] : -(1.0 - y[1]))
     if ndims(ŷ) > 1
         E = 0.0
-        E = agg(map(_y -> -_y[y], eachslice(ŷ, dims=ndims(ŷ))))
+        E = agg(map(_y -> _E(_y,y), eachslice(ŷ, dims=ndims(ŷ))))
         return E
     else
-        return -ŷ[y]
+        return _E(_y,y)
     end
 end
 

@@ -8,7 +8,7 @@ export AbstractSampler, AbstractSamplingRule
 include("utils.jl")
 export _energy
 
-include("Samplers.jl")
+include("Samplers/Samplers.jl")
 using .Samplers
 export ConditionalSampler, UnconditionalSampler
 export energy

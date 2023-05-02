@@ -129,8 +129,6 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
         model.jem_training_params...,
     )
 
-    println("hi")
-
     return model.jem.chain, history
 
 end

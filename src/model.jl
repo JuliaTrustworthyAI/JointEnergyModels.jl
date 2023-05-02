@@ -85,7 +85,7 @@ Computes the total loss.
 """
 function loss(
     jem::JointEnergyModel, x, y; 
-    agg=mean, α=[1.0, 1.0, 0.1],
+    agg=mean, α=[1.0, 1.0, 0.01],
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
@@ -97,8 +97,6 @@ function loss(
         Flux.testmode!(jem.chain)
         ignore_derivatives() do
             _xsample = jem.sampler(jem.chain, jem.sampling_rule; niter=jem.sampling_steps)
-            # Rescale samples:
-            # _xsample = Samplers.decode(jem.sampler, _xsample)
             push!(xsample, _xsample)
         end
         Flux.trainmode!(jem.chain)
@@ -122,7 +120,6 @@ function generate_samples(jem::JointEnergyModel, n::Int; kwargs...)
     model = jem.chain
     rule = jem.sampling_rule
     samples = (sampler::AbstractSampler)(model, rule; n_samples=n, kwargs...)
-    # samples = Samplers.decode(sampler, samples)
     return samples
 end
 

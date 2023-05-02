@@ -8,7 +8,6 @@ using ..JointEnergyModels
 using ..JointEnergyModels: AbstractSampler
 using MLJFlux
 using MLUtils
-using StatsBase
 using Tables
 
 export ConditionalSampler, UnconditionalSampler
@@ -74,7 +73,6 @@ mutable struct ConditionalSampler <: AbstractSampler
     buffer::AbstractArray
     max_len::Int
     prob_buffer::AbstractFloat
-    transformer::Union{Nothing,AbstractDataTransform}
 end
 
 """
@@ -93,7 +91,7 @@ function ConditionalSampler(
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
-    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer, nothing)
+    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
 end
 
 """
@@ -116,11 +114,8 @@ function ConditionalSampler(
     X = X isa Tables.MatrixTable ? MLJFlux.reformat(X) : X
     y = y isa CategoricalArray ? MLJFlux.reformat(y) : y
 
-    # Fit data transformer:
-    dt = fit(UnitRangeTransform, X, dims=ndims(X))
-
     # Prior distributions:
-    𝒟x = Uniform(-1, 1)                                     # following the convention in the literature
+    𝒟x = Uniform(extrema(X)...)                             
     n_classes = size(y, 1)
     𝒟y = Categorical(ones(n_classes) ./ n_classes)          # TODO: make more general
 
@@ -130,39 +125,7 @@ function ConditionalSampler(
     # Buffer:
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
 
-    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer, dt)
-end
-
-"""
-    encode(sampler::ConditionalSampler, x)
-
-Preprocesses input data for `ConditionalSampler` to fit the specified input distribution.
-"""
-function encode(sampler::ConditionalSampler, X::Union{Tables.MatrixTable,AbstractMatrix})
-    X = X isa Tables.MatrixTable ? MLJFlux.reformat(X) : X
-    X_type = eltype(X)
-    if !isnothing(sampler.transformer)
-        StatsBase.transform!(sampler.transformer, X)
-        X = @.(2 * X - 1)       # from [0,1] to [-1,1]
-        X = convert.(X_type, X)
-    end
-    return X
-end
-
-"""
-    decode(sampler::ConditionalSampler, x)
-
-Preprocesses input data for `ConditionalSampler` to fit the specified input distribution.
-"""
-function decode(sampler::ConditionalSampler, X::Union{Tables.MatrixTable,AbstractMatrix})
-    X = X isa Tables.MatrixTable ? MLJFlux.reformat(X) : X
-    X_type = eltype(X)
-    if !isnothing(sampler.transformer)
-        X = @.(1/2 * (X + 1))   # from [-1,1] to [0,1]
-        StatsBase.reconstruct!(sampler.transformer, X)
-        X = convert.(X_type, X)
-    end
-    return X
+    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
 end
 
 """

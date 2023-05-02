@@ -71,6 +71,7 @@ mutable struct ConditionalSampler <: AbstractSampler
     buffer::AbstractArray
     max_len::Int
     prob_buffer::AbstractFloat
+    transformer::Union{Nothing,AbstractDataTransform}
 end
 
 """
@@ -89,13 +90,13 @@ function ConditionalSampler(
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
-    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
+    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer, nothing)
 end
 
 """
     ConditionalSampler(
         X::AbstractArray, y::AbstractArray;
-        input_size::Dims, batch_size::Int,
+        batch_size::Int,
         max_len::Int=10000, prob_buffer::AbstractFloat=0.95
     )
 
@@ -103,13 +104,25 @@ Outer constructor for `ConditionalSampler`.
 """
 function ConditionalSampler(
     X::AbstractArray, y::AbstractArray;
-    input_size::Dims, batch_size::Int=1,
+    batch_size::Int=1,
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
 
+    # Fit data transformer:
+    dt = fit(UnitRangeTransform, X, dims=ndims(X))
+
+    # Prior distributions:
+    𝒟x = Uniform(-1, 1)                 # following the convention in the literature
+    𝒟y = Categorical(1:size(y, 1))      # TODO: make more general
+
+    # Input dimension:
+    input_size = size(X)[1:end-1]
+
+    # Buffer:
     buffer = Float32.(rand(𝒟x, input_size..., batch_size))
-    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
+    
+    return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer, dt)
 end
 
 """

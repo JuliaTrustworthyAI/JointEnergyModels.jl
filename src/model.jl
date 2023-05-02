@@ -1,6 +1,7 @@
 using ChainRulesCore
 using Flux
 using Flux.Losses: logitcrossentropy
+using ..Samplers
 
 struct JointEnergyModel
     chain::Chain
@@ -34,12 +35,12 @@ function class_loss(jem::JointEnergyModel, x, y; loss_fun=logitcrossentropy)
     return ℓ
 end
 
-@doc raw"""
-    gen_loss(jem::JointEnergyModel, x)
-
-Computes the generative loss.
 """
-function gen_loss(jem::JointEnergyModel, x, y)
+    get_samples(jem::JointEnergyModel, x)
+
+Gets samples from the sampler buffer.
+"""
+function get_samples(jem::JointEnergyModel, x)
     size_sample = minimum([size(x)[end], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
     if size_sample < size(x)[end]
         x = selectdim(x, ndims(x), rand(1:size(x)[end], size_sample))
@@ -49,23 +50,29 @@ function gen_loss(jem::JointEnergyModel, x, y)
         ndims(jem.sampler.buffer), 
         1:size_sample
     )
-    @assert size(xsample) == size(x) 
+    @assert size(xsample) == size(x)
+    return x, xsample
+end
+
+@doc raw"""
+    gen_loss(jem::JointEnergyModel, x)
+
+Computes the generative loss.
+"""
+function gen_loss(jem::JointEnergyModel, x, y)
+    x, xsample = get_samples(jem, x)
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .- E(xsample)
     return ℓ
 end
 
+@doc raw"""
+    reg_loss(jem::JointEnergyModel, x)
+
+Computes the regularization loss.
+"""
 function reg_loss(jem::JointEnergyModel, x, y)
-    size_sample = minimum([size(x)[end], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
-    if size_sample < size(x)[end]
-        x = selectdim(x, ndims(x), rand(1:size(x)[end], size_sample))
-    end
-    xsample = selectdim(
-        jem.sampler.buffer,
-        ndims(jem.sampler.buffer),
-        1:size_sample
-    )
-    @assert size(xsample) == size(x)
+    x, xsample = get_samples(jem, x)
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
     ℓ = E(x) .^ 2 .+ E(xsample) .^ 2
     return ℓ
@@ -78,7 +85,7 @@ Computes the total loss.
 """
 function loss(
     jem::JointEnergyModel, x, y; 
-    agg=mean, α=[1.0, 1.0, 0.1],
+    agg=mean, α=[1.0, 1.0, 0.01],
     use_class_loss::Bool=true, 
     use_gen_loss::Bool=true, 
     use_reg_loss::Bool=true,
@@ -112,7 +119,8 @@ function generate_samples(jem::JointEnergyModel, n::Int; kwargs...)
     sampler = jem.sampler
     model = jem.chain
     rule = jem.sampling_rule
-    return (sampler::AbstractSampler)(model, rule; n_samples=n, kwargs...)
+    samples = (sampler::AbstractSampler)(model, rule; n_samples=n, kwargs...)
+    return samples
 end
 
 """

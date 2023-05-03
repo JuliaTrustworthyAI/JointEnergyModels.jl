@@ -31,8 +31,8 @@ batch_size = 100
 𝒟y = Categorical(ones(K) ./ K)
 sampler = UnconditionalSampler(𝒟x; input_size=(D,))
 conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,))
-opt = ImproperSGLD()
-n_iter = 100
+opt = ImproperSGLD(2.0,0.1)
+n_iter = 256
 ```
 
 ### Conditional Draws

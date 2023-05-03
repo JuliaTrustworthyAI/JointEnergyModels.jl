@@ -134,7 +134,7 @@ end
 Energy function for `ConditionalSampler`.
 """
 function energy(sampler::ConditionalSampler, model, x, y)
-    return _energy(model, x, y)
+    return _energy(model, x, y; agg=mean)
 end
 
 """
@@ -213,7 +213,7 @@ end
 Energy function for `UnconditionalSampler`.
 """
 function energy(sampler::UnconditionalSampler, model, x, y)
-    return _energy(model, x)
+    return _energy(model, x; agg=mean)
 end
 
 """

@@ -45,7 +45,7 @@ mlp = Chain(
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = UnconditionalSampler(𝒟x, input_size=(D,D), batch_size=10)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,D), batch_size=10)
 jem = JointEnergyModel(
     mlp, sampler;
     sampling_steps=20,
@@ -99,7 +99,7 @@ plot(plts..., size=(_w,_w), layout=(10,1))
 ```{julia}
 sampler = UnconditionalSampler(𝒟x; input_size=(D,D))
 conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,D))
-opt = ImproperSGLD(2.0,0.001)
+opt = ImproperSGLD(10.0,0.005)
 n_iter = 256
 ```
 

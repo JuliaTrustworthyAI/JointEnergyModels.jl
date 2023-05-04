@@ -32,43 +32,7 @@ batch_size = 100
 sampler = UnconditionalSampler(𝒟x; input_size=(D,))
 conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,))
 opt = ImproperSGLD()
-n_iter = 100
-```
-
-### Unconditional Draws
-
-```{julia}
-_w = 1500
-plts = []
-neach = 10
-for i in 1:10
-    x = sampler(f_mlp, opt; niter=n_iter, n_samples=neach)
-    plts_i = []
-    for j in 1:size(x,2)
-        xj = reshape(x[:,j], (28,28))
-        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
-    end
-    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
-    plts = [plts..., plt]
-end
-plot(plts..., size=(_w,_w), layout=(10,1))
-```
-
-```{julia}
-_w = 1500
-plts = []
-neach = 10
-for i in 1:10
-    x = sampler(f_ens, opt; niter=n_iter, n_samples=neach)
-    plts_i = []
-    for j in 1:size(x,2)
-        xj = reshape(x[:,j], (28,28))
-        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
-    end
-    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
-    plts = [plts..., plt]
-end
-plot(plts..., size=(_w,_w), layout=(10,1))
+n_iter = 256
 ```
 
 ### Conditional Draws
@@ -96,6 +60,42 @@ plts = []
 neach = 10
 for i in 1:10
     x = conditional_sampler(f_ens, opt; niter=n_iter, y=i, n_samples=neach)
+    plts_i = []
+    for j in 1:size(x,2)
+        xj = reshape(x[:,j], (28,28))
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
+```
+
+### Unconditional Draws
+
+```{julia}
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = sampler(f_mlp, opt; niter=n_iter, n_samples=neach)
+    plts_i = []
+    for j in 1:size(x,2)
+        xj = reshape(x[:,j], (28,28))
+        plts_i = [plts_i..., heatmap(rotl90(xj), axis=nothing, cb=false)]
+    end
+    plt = plot(plts_i..., size=(_w,0.10*_w), layout=(1,10))
+    plts = [plts..., plt]
+end
+plot(plts..., size=(_w,_w), layout=(10,1))
+```
+
+```{julia}
+_w = 1500
+plts = []
+neach = 10
+for i in 1:10
+    x = sampler(f_ens, opt; niter=n_iter, n_samples=neach)
     plts_i = []
     for j in 1:size(x,2)
         xj = reshape(x[:,j], (28,28))

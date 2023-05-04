@@ -34,7 +34,7 @@ models = Dict(
 ```
 
 ```{julia}
-loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
+_loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
 rule = Adam()
 ```
 
@@ -47,7 +47,7 @@ for (name, model) in models
     opt_state = Flux.setup(rule, model)
     for epoch in 1:n_epochs
         Flux.train!(model, train_set, opt_state) do m, x, y
-            loss(model(x), y)
+            _loss(model(x), y)
         end
     end
     plt = contour(x1, x2, (x, y) -> softmax(model([x, y]))[1], fill=true, alpha=0.5, title=name, cbar=false)
@@ -80,7 +80,7 @@ num_epochs = 100
 logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
-    α=1e-1,
+    α=[1.0,1.0,1e-1],
     verbosity=minimum([num_epochs, 50]),
     # use_class_loss=false,
     # use_gen_loss=false,

@@ -29,9 +29,10 @@ end
 
 Computes the classification loss.
 """
-function class_loss(jem::JointEnergyModel, x, y; loss_fun=logitcrossentropy)
+function class_loss(jem::JointEnergyModel, x, y; loss_fun=logitcrossentropy, agg=mean)
     ŷ = jem(x)
-    ℓ = loss_fun(ŷ, y)
+    ℓ = loss_fun(ŷ, y, agg=agg)
+    ℓ = ℓ isa Matrix ? vec(ℓ) : ℓ
     return ℓ
 end
 

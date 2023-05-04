@@ -23,7 +23,7 @@ struct SGLD <: AbstractSamplingRule
     gamma::Float64
     state::IdDict{Any,Any}
 end
-SGLD(a::Real=2.0, b::Real=1.0, γ::Real=0.9) = SGLD(a, b, γ, IdDict())
+SGLD(a::Real=10.0, b::Real=1000.0, γ::Real=0.9) = SGLD(a, b, γ, IdDict())
 
 function Flux.Optimise.apply!(o::SGLD, x, Δ)
     a, b, γ = o.a, o.b, o.gamma
@@ -43,14 +43,13 @@ function Flux.Optimise.apply!(o::SGLD, x, Δ)
 end
 
 @doc raw"""
-    ImproperSGLD(a::Real=1.0, b::Real=1.0, γ::Real=0.5)
+    ImproperSGLD(α::Real=2.0, σ::Real=0.01)
 
 Improper [SGLD](https://openreview.net/pdf?id=Hkxzx0NtDB) optimizer.
 
 # Examples
 ```julia
 opt = ImproperSGLD()
-opt = SGLD(2.0, 0.01)
 ```
 """
 struct ImproperSGLD <: AbstractSamplingRule

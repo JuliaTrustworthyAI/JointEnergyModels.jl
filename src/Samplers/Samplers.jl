@@ -13,8 +13,6 @@ using Tables
 export ConditionalSampler, UnconditionalSampler
 export energy
 
-include("pre_processing.jl")
-
 """
     (sampler::AbstractSampler)(
     model, rule::Flux.Optimise.AbstractOptimiser;
@@ -133,8 +131,8 @@ end
 
 Energy function for `ConditionalSampler`.
 """
-function energy(sampler::ConditionalSampler, model, x, y)
-    return _energy(model, x, y; agg=mean)
+function energy(sampler::ConditionalSampler, model, x, y; agg=mean)
+    return _energy(model, x, y; agg=agg)
 end
 
 """

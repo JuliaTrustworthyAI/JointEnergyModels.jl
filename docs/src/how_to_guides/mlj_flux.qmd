@@ -2,7 +2,8 @@
 
 ```{julia}
 #| echo: false
-include("docs/setup_docs.jl")
+
+include("$(pwd())/docs/setup_docs.jl")
 eval(setup_docs)
 ```
 
@@ -23,9 +24,9 @@ clf = JointEnergyClassifier(
     sampler;
     builder=MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu),
     batch_size=batch_size,
-    finaliser=x -> x,
-    loss=Flux.Losses.logitcrossentropy,
-    jem_training_params=(α=[1.0,1.0,0.1],verbosity=5,),
+    finaliser=Flux.softmax,
+    loss=Flux.Losses.crossentropy,
+    jem_training_params=(α=[1.0,1.0,1e-1],verbosity=10,),
 )
 ```
 
@@ -81,7 +82,7 @@ end
 
 ```{julia}
 # Data:
-nobs = 10000
+nobs = 1000
 n_digits = 28
 Xtrain, ytrain, _, _, _, _ = load_mnist_data(nobs=nobs, n_digits=n_digits)
 Xtrain = table(permutedims(MLUtils.flatten(Xtrain)))
@@ -109,13 +110,13 @@ builder = MLJFlux.MLP(hidden=(M,M,M,), σ=activation)
 # We initialize the full model
 𝒟x = Uniform(-1,1)
 𝒟y = Categorical(ones(K) ./ K)
-sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,), batch_size=100)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=(D,), batch_size=10)
 clf = JointEnergyClassifier(
     sampler;
     builder=builder,
     batch_size=batch_size,
-    finaliser=x -> x,
-    loss=Flux.Losses.logitcrossentropy,
+    finaliser=Flux.softmax,
+    loss=Flux.Losses.crossentropy,
     jem_training_params=(α=α,verbosity=10,),
     sampling_steps=20,
     optimiser=Flux.Optimise.Adam(lr),

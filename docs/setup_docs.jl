@@ -23,8 +23,8 @@ setup_docs = quote
     # Setup:
     theme(:wong)
     Random.seed!(2023)
-    www_path = "docs/src/www"
-    include("docs/src/utils/utils.jl")
+    www_path = "$(pwd())/docs/src/www"
+    include("$(pwd())/docs/src/utils/utils.jl")
     ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
 end;

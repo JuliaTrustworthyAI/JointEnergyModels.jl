@@ -1,0 +1,138 @@
+# Synthetic Data
+
+```{julia}
+#| echo: false
+include("docs/setup_docs.jl")
+eval(setup_docs)
+```
+
+## Binary Classification
+
+```{julia}
+nobs=2000
+X, y = make_circles(nobs, noise=0.1, factor=0.5)
+X = Float32.(permutedims(matrix(X)))
+y_labels = Int.(y.refs)
+y = Flux.onehotbatch(y.refs, sort(unique(y_labels)))
+display(scatter(X[1,:], X[2,:], color=vec(y_labels), label=""))
+batch_size = Int(round(nobs/10))
+train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
+```
+
+```{julia}
+n_hidden = 32
+activation = relu
+models = Dict(
+    "Logistic Regression" => Chain(Dense(2, size(y,1))),
+    "MLP" => Chain(
+        Dense(2, n_hidden, activation), 
+        Dense(n_hidden, n_hidden, activation), 
+        Dense(n_hidden, n_hidden, activation), 
+        Dense(n_hidden, size(y,1))
+    ),
+)
+```
+
+```{julia}
+_loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
+rule = Adam()
+```
+
+```{julia}
+_lims = extrema(X, dims=2)
+x1, x2 = map(ex -> range(1.1f0.*ex..., length=100), _lims)
+n_epochs = 100
+plts = []
+for (name, model) in models
+    opt_state = Flux.setup(rule, model)
+    for epoch in 1:n_epochs
+        Flux.train!(model, train_set, opt_state) do m, x, y
+            _loss(model(x), y)
+        end
+    end
+    plt = contour(x1, x2, (x, y) -> softmax(model([x, y]))[1], fill=true, alpha=0.5, title=name, cbar=false)
+    scatter!(X[1,:], X[2,:], color=vec(y_labels), label="")
+    push!(plts, plt)
+end
+plot(plts..., layout=(1, 2), size=(800, 400))
+```
+
+## Joint Energy Model
+
+```{julia}
+# We initialize the full model:
+𝒟x = Normal()
+𝒟y = Categorical(ones(2) ./ 2)
+sampler = ConditionalSampler(𝒟x, 𝒟y, input_size=size(X)[1:end-1], batch_size=batch_size)
+jem = JointEnergyModel(
+    models["MLP"], 
+    sampler;
+    sampling_rule=ImproperSGLD(),
+    sampling_steps=10
+)
+# Initialise training:
+opt = Adam(1e-3)
+opt_state = Flux.setup(opt, jem)
+num_epochs = 100
+```
+
+```{julia}
+logs = JointEnergyModels.train_model(
+    jem, train_set, opt_state; 
+    num_epochs=num_epochs,
+    α=[1.0,1.0,1e-1],
+    verbosity=minimum([num_epochs, 50]),
+    # use_class_loss=false,
+    # use_gen_loss=false,
+    # use_reg_loss=false,
+)
+```
+
+
+```{julia}
+plts = []
+for target in 1:size(y,1)
+    plt = contour(x1, x2, (x, y) -> softmax(jem([x, y]))[target], fill=true, alpha=0.5, title="Target: $target", cbar=false)
+    scatter!(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels))
+    push!(plts, plt)
+end
+plot(plts..., layout=(1, size(y,1)), size=(size(y,1)*400, 400))
+```
+
+```{julia}
+X̂ = generate_samples(jem, 1000; niter=1000)
+ŷ = onecold(softmax(jem(X̂)))
+scatter(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels), alpha=0.5)
+scatter!(X̂[1,:], X̂[2,:], color=vec(ŷ), group=vec(ŷ), title="Generated Samples", shape=:star5)
+```
+
+```{julia}
+if typeof(jem.sampler) <: ConditionalSampler
+    
+    plts = []
+    for target in 1:size(y,1)
+        X̂ = generate_conditional_samples(jem, batch_size, target; niter=1000) 
+        ex = extrema(hcat(X,X̂), dims=2)
+        xlims = ex[1]
+        ylims = ex[2]
+        x1 = range(1.0f0.*xlims...,length=100)
+        x2 = range(1.0f0.*ylims...,length=100)
+        plt = contour(
+            x1, x2, (x, y) -> softmax(jem([x, y]))[target], 
+            fill=true, alpha=0.5, title="Target: $target", cbar=false,
+            xlims=xlims,
+            ylims=ylims,
+        )
+        scatter!(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels), alpha=0.5)
+        scatter!(
+            X̂[1,:], X̂[2,:], 
+            color=repeat([target], size(X̂,2)), 
+            group=repeat([target], size(X̂,2)), 
+            shape=:star5, ms=10
+        )
+        push!(plts, plt)
+    end
+    plot(plts..., layout=(1, size(y,1)), size=(size(y,1)*400, 400))
+end
+```
+

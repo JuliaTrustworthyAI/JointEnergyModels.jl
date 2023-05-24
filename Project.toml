@@ -1,7 +1,7 @@
 name = "JointEnergyModels"
 uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
 authors = ["Patrick Altmeyer"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"

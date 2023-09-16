@@ -126,6 +126,7 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
         class_loss_fun=loss,
         progress_meter=meter,
         num_epochs=model.epochs,
+        to_gpu=model.acceleration isa CUDALibs,
         model.jem_training_params...,
     )
 

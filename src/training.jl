@@ -52,7 +52,16 @@ function train_model(
     α=[1.0,1.0,1e-1],
     class_loss_fun::Function=logitcrossentropy,
     progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
+    to_gpu::Bool=false,
 )
+
+    # Move model to GPU if to_gpu:
+    if to_gpu
+        jem = gpu(jem)
+        train_set = gpu(train_set)
+    end
+
+    # Set up:
     training_log = []
     not_finite_counter = 0
     if isnothing(progress_meter)
@@ -63,6 +72,7 @@ function train_model(
         verbosity == 0 || next!(progress_meter)
     end
 
+    # Training loop:
     for epoch in 1:num_epochs
         training_losses = Float32[]
 

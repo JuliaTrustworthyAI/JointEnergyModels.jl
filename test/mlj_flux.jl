@@ -21,4 +21,17 @@ mach = machine(clf, X, y)
             fit!(mach)
         end
     end
+
+    @testset "gpu" begin
+        clf = JointEnergyClassifier(
+            sampler;
+            builder=MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu),
+            batch_size=batch_size,
+            finaliser=x -> x,
+            loss=Flux.Losses.logitcrossentropy,
+            jem_training_params=(α=[1.0, 1.0, 0.1], verbosity=5,)
+            acceleration = CUDALibs()
+        )
+        mach = machine(clf, X, y)
+    end
 end

@@ -23,6 +23,7 @@
     end
 
     @testset "GPU" begin
+        @info "CUDA is functional: $(CUDA.functional())."
         clf = JointEnergyClassifier(
             sampler;
             builder=MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu),

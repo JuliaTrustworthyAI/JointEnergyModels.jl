@@ -1,3 +1,4 @@
+using CUDA
 using Distributions
 using Flux
 using JointEnergyModels

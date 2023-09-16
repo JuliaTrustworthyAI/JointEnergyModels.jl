@@ -29,7 +29,7 @@
             batch_size=batch_size,
             finaliser=x -> x,
             loss=Flux.Losses.logitcrossentropy,
-            jem_training_params=(α=[1.0, 1.0, 0.1], verbosity=5,)
+            jem_training_params=(α=[1.0, 1.0, 0.1], verbosity=5,),
             acceleration = CUDALibs()
         )
         mach = machine(clf, X, y)

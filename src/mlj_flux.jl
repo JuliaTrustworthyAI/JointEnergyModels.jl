@@ -121,6 +121,11 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
     train_set = zip(X, y)
     opt_state = Flux.setup(optimiser, model.jem)
 
+    # move sampler to GPU if to_gpu:
+    if model.acceleration isa CUDALibs
+        model.sampler = gpu(model.sampler)
+    end
+
     history = train_model(
         model.jem, train_set, opt_state;
         class_loss_fun=loss,

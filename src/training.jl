@@ -53,6 +53,8 @@ function train_model(
     class_loss_fun::Function=logitcrossentropy,
     progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
 )
+
+    # Set up:
     training_log = []
     not_finite_counter = 0
     if isnothing(progress_meter)
@@ -63,6 +65,7 @@ function train_model(
         verbosity == 0 || next!(progress_meter)
     end
 
+    # Training loop:
     for epoch in 1:num_epochs
         training_losses = Float32[]
 

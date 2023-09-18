@@ -52,9 +52,11 @@ function get_samples(jem::JointEnergyModel, x)
         1:size_sample
     )
 
-    x, xsample = gpu(x), gpu(xsample)
-
     @assert size(xsample) == size(x)
+
+    @info "Using GPU for sampling."
+    x, xsample = gpu(x), gpu(xsample)
+    
     return x, xsample
 end
 

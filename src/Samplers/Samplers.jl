@@ -54,7 +54,7 @@ function (sampler::AbstractSampler)(
     _end = minimum([size(sampler.buffer, ndims(sampler.buffer)), sampler.max_len])
     sampler.buffer = selectdim(sampler.buffer, ndims(sampler.buffer), 1:_end)
 
-    return inp_samples
+    return inp_samples |> gpu
 
 end
 
@@ -88,7 +88,7 @@ function ConditionalSampler(
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
-    buffer = Float32.(rand(𝒟x, input_size..., batch_size)) |> gpu
+    buffer = Float32.(rand(𝒟x, input_size..., batch_size)) 
     return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
 end
 
@@ -121,7 +121,7 @@ function ConditionalSampler(
     input_size = size(X)[1:end-1]
 
     # Buffer:
-    buffer = Float32.(rand(𝒟x, input_size..., batch_size)) |> gpu
+    buffer = Float32.(rand(𝒟x, input_size..., batch_size))
 
     return ConditionalSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
 end
@@ -201,7 +201,7 @@ function UnconditionalSampler(
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
-    buffer = Float32.(rand(𝒟x, input_size..., batch_size)) |> gpu
+    buffer = Float32.(rand(𝒟x, input_size..., batch_size))
     return UnconditionalSampler(𝒟x, input_size, batch_size, buffer, max_len, prob_buffer)
 end
 
@@ -278,7 +278,7 @@ function JointSampler(
     max_len::Int=10000, prob_buffer::AbstractFloat=0.95
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
-    buffer = Float32.(rand(𝒟x, input_size..., batch_size)) |> gpu
+    buffer = Float32.(rand(𝒟x, input_size..., batch_size))
     return JointSampler(𝒟x, 𝒟y, input_size, batch_size, buffer, max_len, prob_buffer)
 end
 

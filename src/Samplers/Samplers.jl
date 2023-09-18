@@ -54,7 +54,7 @@ function (sampler::AbstractSampler)(
     _end = minimum([size(sampler.buffer, ndims(sampler.buffer)), sampler.max_len])
     sampler.buffer = selectdim(sampler.buffer, ndims(sampler.buffer), 1:_end)
 
-    return inp_samples |> gpu
+    return inp_samples
 
 end
 

@@ -51,6 +51,9 @@ function get_samples(jem::JointEnergyModel, x)
         ndims(jem.sampler.buffer), 
         1:size_sample
     )
+
+    x, xsample = gpu(x), gpu(xsample)
+
     @assert size(xsample) == size(x)
     return x, xsample
 end

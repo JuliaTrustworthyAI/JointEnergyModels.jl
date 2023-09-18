@@ -47,7 +47,7 @@ function (sampler::AbstractSampler)(
         kwargs...
     )
     Flux.trainmode!(model)
-    inp_samples = Float32.(clamp.(inp_samples, minimum(sampler.𝒟x), maximum(sampler.𝒟x))) |> gpu
+    inp_samples = Float32.(clamp.(inp_samples, minimum(sampler.𝒟x), maximum(sampler.𝒟x)))
 
     # Update buffer:
     sampler.buffer = cat(inp_samples, sampler.buffer, dims=ndims(sampler.buffer))

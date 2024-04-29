@@ -1,14 +1,9 @@
 # Synthetic Data
 
-```{julia}
-#| echo: false
-include("$(pwd())/docs/setup_docs.jl")
-eval(setup_docs)
-```
 
 ## Binary Classification
 
-```{julia}
+``` julia
 nobs=2000
 X, y = make_circles(nobs, noise=0.1, factor=0.5)
 X = Float32.(permutedims(matrix(X)))
@@ -19,7 +14,7 @@ batch_size = Int(round(nobs/10))
 train_set = DataLoader((X, y), batchsize=batch_size, shuffle=true)
 ```
 
-```{julia}
+``` julia
 n_hidden = 32
 activation = relu
 models = Dict(
@@ -33,12 +28,12 @@ models = Dict(
 )
 ```
 
-```{julia}
+``` julia
 _loss(y_hat, y) = Flux.Losses.logitcrossentropy(y_hat, y)
 rule = Adam()
 ```
 
-```{julia}
+``` julia
 _lims = extrema(X, dims=2)
 x1, x2 = map(ex -> range(1.1f0.*ex..., length=100), _lims)
 n_epochs = 100
@@ -59,7 +54,7 @@ plot(plts..., layout=(1, 2), size=(800, 400))
 
 ## Joint Energy Model
 
-```{julia}
+``` julia
 # We initialize the full model:
 𝒟x = Normal()
 𝒟y = Categorical(ones(2) ./ 2)
@@ -76,7 +71,7 @@ opt_state = Flux.setup(opt, jem)
 num_epochs = 100
 ```
 
-```{julia}
+``` julia
 logs = JointEnergyModels.train_model(
     jem, train_set, opt_state; 
     num_epochs=num_epochs,
@@ -88,8 +83,7 @@ logs = JointEnergyModels.train_model(
 )
 ```
 
-
-```{julia}
+``` julia
 plts = []
 for target in 1:size(y,1)
     plt = contour(x1, x2, (x, y) -> softmax(jem([x, y]))[target], fill=true, alpha=0.5, title="Target: $target", cbar=false)
@@ -99,14 +93,14 @@ end
 plot(plts..., layout=(1, size(y,1)), size=(size(y,1)*400, 400))
 ```
 
-```{julia}
+``` julia
 X̂ = generate_samples(jem, 1000; niter=1000)
 ŷ = onecold(softmax(jem(X̂)))
 scatter(X[1,:], X[2,:], color=vec(y_labels), group=vec(y_labels), alpha=0.5)
 scatter!(X̂[1,:], X̂[2,:], color=vec(ŷ), group=vec(ŷ), title="Generated Samples", shape=:star5)
 ```
 
-```{julia}
+``` julia
 if typeof(jem.sampler) <: ConditionalSampler
     
     plts = []
@@ -135,4 +129,3 @@ if typeof(jem.sampler) <: ConditionalSampler
     plot(plts..., layout=(1, size(y,1)), size=(size(y,1)*400, 400))
 end
 ```
-

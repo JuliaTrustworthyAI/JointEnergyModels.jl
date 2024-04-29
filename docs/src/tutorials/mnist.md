@@ -1,15 +1,9 @@
-
 # Joint Energy Models
 
-```{julia}
-#| echo: false
-include("$(pwd())/docs/setup_docs.jl")
-eval(setup_docs)
-```
 
 ## Data
 
-```{julia}
+``` julia
 nobs = 1000
 n_digits = 28
 Xtrain, ytrain, Xval, yval, Xtest, ytest = load_mnist_data(nobs=nobs, n_digits=n_digits)
@@ -19,7 +13,7 @@ Xtrain, ytrain, Xval, yval, Xtest, ytest = load_mnist_data(nobs=nobs, n_digits=n
 
 ### Hyperparameters
 
-```{julia}
+``` julia
 D = n_digits               
 K = 10                      
 M = 128
@@ -31,7 +25,7 @@ batchsize = Int(round(nobs/10))
 
 ### Initializing the model
 
-```{julia}
+``` julia
 activation = relu
 mlp = Chain(
     MLUtils.flatten,
@@ -54,7 +48,7 @@ jem = JointEnergyModel(
 
 ### Training loop
 
-```{julia}
+``` julia
 # Initialise 
 opt = Adam(lr)
 opt_state = Flux.setup(opt, jem)
@@ -63,7 +57,7 @@ val_set = DataLoader((Xval, yval); batchsize=batchsize, shuffle=false)
 test_set = DataLoader((Xtest, ytest); batchsize=batchsize, shuffle=false)
 ```
 
-```{julia}
+``` julia
 logs = train_model(
     jem, train_set, opt_state; num_epochs=num_epochs, val_set=val_set,
     verbosity = minimum([num_epochs, 10]),
@@ -76,7 +70,7 @@ logs = train_model(
 
 ### The final evaluation
 
-```{julia}
+``` julia
 n_iter = 200
 _w = 1500
 plts = []
@@ -96,14 +90,14 @@ plot(plts..., size=(_w,_w), layout=(10,1))
 
 #### From Scratch
 
-```{julia}
+``` julia
 sampler = UnconditionalSampler(𝒟x; input_size=(D,D))
 conditional_sampler = ConditionalSampler(𝒟x, 𝒟y; input_size=(D,D))
 opt = ImproperSGLD(10.0,0.005)
 n_iter = 256
 ```
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10
@@ -120,7 +114,7 @@ end
 plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10

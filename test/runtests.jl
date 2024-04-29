@@ -5,9 +5,6 @@ using MLJBase
 using MLJFlux
 using Test
 
-import CompatHelperLocal as CHL
-CHL.@check()
-
 include("utils.jl")
 
 @testset "JointEnergyModels.jl" begin

@@ -1,19 +1,12 @@
 # MNIST
 
-```{julia}
-#| echo: false
-include("$(pwd())/docs/setup_docs.jl")
-eval(setup_docs)
-```
 
-
-```{julia}
+``` julia
 using TaijaData: load_mnist
 using CounterfactualExplanations.Models: load_mnist_mlp, load_mnist_ensemble
 ```
 
-
-```{julia}
+``` julia
 X, y = load_mnist()
 K = size(y, 1)
 D = size(X, 1)
@@ -26,7 +19,7 @@ batch_size = 100
 
 ## Sampling
 
-```{julia}
+``` julia
 𝒟x = Uniform(0,1)
 𝒟y = Categorical(ones(K) ./ K)
 sampler = UnconditionalSampler(𝒟x; input_size=(D,))
@@ -37,7 +30,7 @@ n_iter = 256
 
 ### Conditional Draws
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10
@@ -54,7 +47,7 @@ end
 plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10
@@ -73,7 +66,7 @@ plot(plts..., size=(_w,_w), layout=(10,1))
 
 ### Unconditional Draws
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10
@@ -90,7 +83,7 @@ end
 plot(plts..., size=(_w,_w), layout=(10,1))
 ```
 
-```{julia}
+``` julia
 _w = 1500
 plts = []
 neach = 10

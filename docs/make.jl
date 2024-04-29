@@ -3,6 +3,8 @@ using Documenter
 
 include("setup_docs.jl")
 
+include("assets.jl")
+
 DocMeta.setdocmeta!(JointEnergyModels, :DocTestSetup, :(setup_docs); recursive=true)
 
 makedocs(;

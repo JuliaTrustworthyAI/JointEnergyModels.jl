@@ -1,5 +1,5 @@
-
 # `JointEnergyModels.jl`
+
 
 *Joint Energy Models in Julia.*
 

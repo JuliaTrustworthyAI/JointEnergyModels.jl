@@ -9,7 +9,7 @@ crossref:
   tbl-prefix: Table
 bibliography: bib.bib
 output: asis
-jupyter: julia-1.8
+jupyter: julia-1.10
 execute: 
   freeze: auto
   eval: true

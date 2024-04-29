@@ -2,19 +2,19 @@
 
 ```{julia}
 #| echo: false
-include("docs/setup_docs.jl")
+include("$(pwd())/docs/setup_docs.jl")
 eval(setup_docs)
 ```
 
 
 ```{julia}
-using CounterfactualExplanations.Data: load_mnist
+using TaijaData: load_mnist
 using CounterfactualExplanations.Models: load_mnist_mlp, load_mnist_ensemble
 ```
 
 
 ```{julia}
-X, y = load_mnist().X, load_mnist().y
+X, y = load_mnist()
 K = size(y, 1)
 D = size(X, 1)
 mlp = load_mnist_mlp().model

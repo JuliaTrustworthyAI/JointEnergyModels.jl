@@ -19,6 +19,8 @@ setup_docs = quote
     using Plots.PlotMeasures
     using Random
     using Statistics
+    using TaijaBase
+    using TaijaBase.Samplers: ConditionalSampler
 
     # Setup:
     theme(:wong)

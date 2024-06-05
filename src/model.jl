@@ -1,7 +1,7 @@
 using ChainRulesCore
 using Flux
 using Flux.Losses: logitcrossentropy
-using ..Samplers
+using TaijaBase.Samplers: ImproperSGLD
 
 struct JointEnergyModel
     chain::Chain

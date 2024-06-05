@@ -8,10 +8,8 @@ using Test
 include("utils.jl")
 
 @testset "JointEnergyModels.jl" begin
-    
-    @testset "samplers.jl" begin
-        include("samplers.jl")
-    end
+
+    include("aqua.jl")
 
     @testset "mlj_flux.jl" begin
         include("mlj_flux.jl")

@@ -1,31 +1,27 @@
 module JointEnergyModels
 
 using Flux
-abstract type AbstractSamplingRule <: Flux.Optimise.AbstractOptimiser end
-abstract type AbstractSampler end
-export AbstractSampler, AbstractSamplingRule
+using TaijaBase
+using TaijaBase.Samplers
+
+using Reexport
+@reexport import TaijaBase.Samplers: ConditionalSampler, UnconditionalSampler, JointSampler
 
 include("utils.jl")
 export _energy
 
-include("Samplers/Samplers.jl")
-using .Samplers
-export ConditionalSampler, UnconditionalSampler
-export energy
 
 include("model.jl")
 export JointEnergyModel
 export class_loss, gen_loss, loss
 export generate_samples, generate_conditional_samples
 
-include("Optimisers.jl")
-using .Optimisers
-export SGLD, ImproperSGLD
-
 include("training.jl")
 export train_model
 
 include("mlj_flux.jl")
 export JointEnergyClassifier
+
+include("samplers.jl")
 
 end

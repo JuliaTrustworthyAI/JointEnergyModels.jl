@@ -26,8 +26,6 @@ Depth = 3
 ``` @autodocs
 Modules = [
     JointEnergyModels,
-    JointEnergyModels.Samplers,
-    JointEnergyModels.Optimisers,
 ]
 Private = false
 ```
@@ -37,8 +35,6 @@ Private = false
 ``` @autodocs
 Modules = [
     JointEnergyModels,
-    JointEnergyModels.Samplers,
-    JointEnergyModels.Optimisers,
 ]
 Public = false
 ```

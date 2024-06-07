@@ -120,7 +120,7 @@ function generate_samples(jem::JointEnergyModel, n::Int; kwargs...)
     sampler = jem.sampler
     model = jem.chain
     rule = jem.sampling_rule
-    samples = (sampler::AbstractSampler)(model, rule; n_samples=n, kwargs...)
+    samples = sampler(model, rule; n_samples=n, kwargs...)
     return samples
 end
 

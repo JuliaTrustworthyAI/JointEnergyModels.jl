@@ -1,5 +1,5 @@
 using Flux: onecold
-using Flux.Data: DataLoader
+using Flux: DataLoader
 using Flux.Losses: logitcrossentropy
 using ProgressMeter
 

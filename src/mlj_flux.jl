@@ -6,7 +6,7 @@ using ProgressMeter
 using Random
 using Tables
 
-const default_builder_jem = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.swish)
+const default_builder_jem = MLJFlux.MLP(hidden = (32, 32, 32), σ = Flux.swish)
 
 "The `JointEnergyClassifier` struct is a wrapper for a `JointEnergyModel` that can be used with MLJFlux.jl."
 mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
@@ -29,22 +29,38 @@ end
 
 function JointEnergyClassifier(
     sampler::AbstractSampler;
-    builder::B=default_builder_jem,
-    finaliser::F=Flux.softmax,
-    optimiser::O=Flux.Optimise.Adam(),
-    loss::L=Flux.crossentropy,
-    epochs::Int=100, batch_size::Int=100, lambda::Float64=0.0, alpha::Float64=0.0,
-    rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
-    optimiser_changes_trigger_retraining::Bool=false,
-    acceleration::AbstractResource=CPU1(),
-    jem_training_params::NamedTuple=(verbosity=epochs,num_epochs=epochs,),
-    sampling_steps::Union{Nothing,Int}=nothing,
+    builder::B = default_builder_jem,
+    finaliser::F = Flux.softmax,
+    optimiser::O = Flux.Optimise.Adam(),
+    loss::L = Flux.crossentropy,
+    epochs::Int = 100,
+    batch_size::Int = 100,
+    lambda::Float64 = 0.0,
+    alpha::Float64 = 0.0,
+    rng::Union{AbstractRNG,Int64} = Random.GLOBAL_RNG,
+    optimiser_changes_trigger_retraining::Bool = false,
+    acceleration::AbstractResource = CPU1(),
+    jem_training_params::NamedTuple = (verbosity = epochs, num_epochs = epochs),
+    sampling_steps::Union{Nothing,Int} = nothing,
 ) where {B,F,O,L}
 
     # Initialise the MLJFlux wrapper:
     mlj_jem = JointEnergyClassifier(
-        builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration, sampler, nothing, jem_training_params, sampling_steps
+        builder,
+        finaliser,
+        optimiser,
+        loss,
+        epochs,
+        batch_size,
+        lambda,
+        alpha,
+        rng,
+        optimiser_changes_trigger_retraining,
+        acceleration,
+        sampler,
+        nothing,
+        jem_training_params,
+        sampling_steps,
     )
 
     return mlj_jem
@@ -71,16 +87,10 @@ function MLJFlux.build(model::JointEnergyClassifier, rng, shape)
 
     # JointEnergyModel:
     if isnothing(model.sampling_steps)
-        model.jem = JointEnergyModel(
-            chain,
-            model.sampler,
-        )
+        model.jem = JointEnergyModel(chain, model.sampler)
     else
-        model.jem = JointEnergyModel(
-            chain,
-            model.sampler;
-            sampling_steps=model.sampling_steps,
-        )
+        model.jem =
+            JointEnergyModel(chain, model.sampler; sampling_steps = model.sampling_steps)
     end
 
     return chain
@@ -89,32 +99,44 @@ end
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
 # metadata)`, where `metadata` is anything extra needed by `predict`:
-MLJFlux.fitresult(model::JointEnergyClassifier, chain, y) =
-    (chain, MMI.classes(y[1]))
+MLJFlux.fitresult(model::JointEnergyClassifier, chain, y) = (chain, MMI.classes(y[1]))
 
-function MMI.predict(
-    model::JointEnergyClassifier,
-    fitresult,
-    Xnew
-)
+function MMI.predict(model::JointEnergyClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = MLJFlux.reformat(Xnew)
-    probs = vcat([chain(MLJFlux.tomat(X[:, i]))' for i in 1:size(X, 2)]...)
+    probs = vcat([chain(MLJFlux.tomat(X[:, i]))' for i = 1:size(X, 2)]...)
     return MMI.UnivariateFinite(levels, probs)
 end
 
-MMI.metadata_model(JointEnergyClassifier,
-    input=Union{AbstractArray,MMI.Table(MMI.Continuous)},
-    target=AbstractVector{<:MMI.Finite},
-    path="MLJFlux.JointEnergyClassifier")
+MMI.metadata_model(
+    JointEnergyClassifier,
+    input = Union{AbstractArray,MMI.Table(MMI.Continuous)},
+    target = AbstractVector{<:MMI.Finite},
+    path = "MLJFlux.JointEnergyClassifier",
+)
 
-function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, epochs, verbosity, X, y)
+function MLJFlux.fit!(
+    model::JointEnergyClassifier,
+    penalty,
+    chain,
+    optimiser,
+    epochs,
+    verbosity,
+    X,
+    y,
+)
 
     loss = model.loss
 
     # intitialize and start progress meter:
-    meter = Progress(epochs, dt=0, desc="Optimising neural net:",
-        barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
+    meter = Progress(
+        epochs,
+        dt = 0,
+        desc = "Optimising neural net:",
+        barglyphs = BarGlyphs("[=> ]"),
+        barlen = 25,
+        color = :yellow,
+    )
     verbosity != 1 || next!(meter)
 
     # initiate training:
@@ -122,10 +144,12 @@ function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, e
     opt_state = Flux.setup(optimiser, model.jem)
 
     history = train_model(
-        model.jem, train_set, opt_state;
-        class_loss_fun=loss,
-        progress_meter=meter,
-        num_epochs=model.epochs,
+        model.jem,
+        train_set,
+        opt_state;
+        class_loss_fun = loss,
+        progress_meter = meter,
+        num_epochs = model.epochs,
         model.jem_training_params...,
     )
 

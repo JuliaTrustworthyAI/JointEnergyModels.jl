@@ -13,9 +13,9 @@ Outer constructor for `ConditionalSampler`.
 function TaijaBase.Samplers.ConditionalSampler(
     X::Union{Tables.MatrixTable,AbstractMatrix},
     y::Union{CategoricalArray,AbstractMatrix};
-    batch_size::Int=1,
-    max_len::Int=10000,
-    prob_buffer::AbstractFloat=0.95,
+    batch_size::Int = 1,
+    max_len::Int = 10000,
+    prob_buffer::AbstractFloat = 0.95,
 )
     @assert batch_size <= max_len "batch_size must be <= max_len"
 

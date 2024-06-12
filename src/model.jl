@@ -38,16 +38,25 @@ function class_loss(jem::JointEnergyModel, x, y; loss_fun = logitcrossentropy, a
 end
 
 """
-    get_samples(jem::JointEnergyModel, x)
+    get_samples(jem::JointEnergyModel, x)::Tuple{AbstractArray,AbstractArray}
 
 Gets samples from the sampler buffer.
+
+# Arguments
+
+- `jem::JointEnergyModel`: The joint energy model.
+- `x`: The input data.
 """
 function get_samples(jem::JointEnergyModel, x)
+    # Determine the size of the batch:
+    # Either the size of the input data (training batch size) or the total size of the buffer, whichever is smaller.
     size_sample =
         minimum([size(x)[end], size(jem.sampler.buffer, ndims(jem.sampler.buffer))])
+    # If the input batch is larger than the buffer, we need to sample a subset of the input data.
     if size_sample < size(x)[end]
         x = selectdim(x, ndims(x), rand(1:size(x)[end], size_sample))
     end
+    # Get the `size_sample` samples from the buffer that were last added:
     xsample = selectdim(jem.sampler.buffer, ndims(jem.sampler.buffer), 1:size_sample)
     @assert size(xsample) == size(x)
     return x, xsample

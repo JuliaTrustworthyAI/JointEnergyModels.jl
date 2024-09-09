@@ -2,13 +2,15 @@ using CategoricalArrays
 using Distributions
 
 """
-    ConditionalSampler(
-        X::AbstractArray, y::AbstractArray;
-        batch_size::Int,
-        max_len::Int=10000, prob_buffer::AbstractFloat=0.95
+    TaijaBase.Samplers.ConditionalSampler(
+        X::Union{Tables.MatrixTable,AbstractMatrix},
+        y::Union{CategoricalArray,AbstractMatrix};
+        batch_size::Int = 1,
+        max_len::Int = 10000,
+        prob_buffer::AbstractFloat = 0.95,
     )
 
-Outer constructor for `ConditionalSampler`.
+Overloads the `ConditionalSampler` constructor to preprocess the input data and return a `ConditionalSampler` object.
 """
 function TaijaBase.Samplers.ConditionalSampler(
     X::Union{Tables.MatrixTable,AbstractMatrix},

@@ -77,7 +77,7 @@ The model can be wrapped in data and trained using the `fit!` function:
 
 ```{julia}
 mach = machine(clf, X, y)
-fit!(mach)
+fit!(mach, verbosity=1)
 ```
 
 The results are visualised below. The model has learned to discriminate between the two classes (as indicated by the contours) and to generate samples from each class (as indicated by the stars).

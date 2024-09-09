@@ -116,11 +116,11 @@ MMI.metadata_model(
     path = "MLJFlux.JointEnergyClassifier",
 )
 
-function MLJFlux.fit!(
+function MLJFlux.train(
     model::JointEnergyClassifier,
-    penalty,
     chain,
     optimiser,
+    optimiser_state,
     epochs,
     verbosity,
     X,
@@ -154,6 +154,6 @@ function MLJFlux.fit!(
         model.jem_training_params...,
     )
 
-    return model.jem.chain, history
+    return model.jem.chain, optimiser_state, history
 
 end

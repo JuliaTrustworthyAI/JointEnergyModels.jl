@@ -5,4 +5,4 @@
 
 /.quarto/
 
-Manifest.toml
+**/Manifest.toml

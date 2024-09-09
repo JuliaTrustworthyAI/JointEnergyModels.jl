@@ -1,13 +1,14 @@
 name = "JointEnergyModels"
 uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
 authors = ["Patrick Altmeyer"]
-version = "0.1.5"
+version = "0.1.6"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ComputationalResources = "ed09eef8-17a6-5b46-8889-db040fac31e3"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+EnergySamplers = "f446124b-5d5e-4171-a6dd-a1d99768d3ce"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"

@@ -1,11 +1,11 @@
 module JointEnergyModels
 
+using EnergySamplers
 using Flux
 using TaijaBase
-using TaijaBase.Samplers
 
 using Reexport
-@reexport import TaijaBase.Samplers: ConditionalSampler, UnconditionalSampler, JointSampler
+@reexport import EnergySamplers: ConditionalSampler, UnconditionalSampler, JointSampler
 
 include("utils.jl")
 export _energy

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Note*: We try to adhere to these practices as of version [v0.1.4].
 
+## Version [0.1.6] - 2024-09-09
+
+### Changed
+
+- Now depending on new `EnergySamplers` package for energy-based sampling. [#27]
+
 ## Version [0.1.5] - 2024-06-07
 
 ### Changed

@@ -1,3 +1,9 @@
+---
+engine: julia
+julia: 
+  exeflags: ["--project=../"]
+---
+
 ```@meta
 CurrentModule = JointEnergyModels
 ```

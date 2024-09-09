@@ -20,7 +20,7 @@ setup_docs = quote
     using Random
     using Statistics
     using TaijaBase
-    using TaijaBase.Samplers: ConditionalSampler
+    using EnergySamplers: ConditionalSampler
 
     # Setup:
     theme(:wong)

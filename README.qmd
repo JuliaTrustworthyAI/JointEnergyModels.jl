@@ -9,12 +9,14 @@ crossref:
   tbl-prefix: Table
 bibliography: bib.bib
 output: asis
-jupyter: julia-1.10
 execute: 
   freeze: auto
-  eval: true
+  eval: false
   echo: true
   output: false
+engine: julia
+julia: 
+  exeflags: ["--project=docs/"]
 ---
 
 # `JointEnergyModels.jl`

@@ -10,7 +10,7 @@ using Distributions
 
 Outer constructor for `ConditionalSampler`.
 """
-function TaijaBase.Samplers.ConditionalSampler(
+function EnergySamplers.ConditionalSampler(
     X::Union{Tables.MatrixTable,AbstractMatrix},
     y::Union{CategoricalArray,AbstractMatrix};
     batch_size::Int = 1,

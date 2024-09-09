@@ -2,6 +2,7 @@ using ComputationalResources
 using Flux
 using MLJFlux
 import MLJModelInterface as MMI
+using Optimisers
 using ProgressMeter
 using Random
 using Tables
@@ -31,7 +32,7 @@ function JointEnergyClassifier(
     sampler::AbstractSampler;
     builder::B = default_builder_jem,
     finaliser::F = Flux.softmax,
-    optimiser::O = Flux.Optimise.Adam(),
+    optimiser::O = Optimisers.Adam(),
     loss::L = Flux.crossentropy,
     epochs::Int = 100,
     batch_size::Int = 100,

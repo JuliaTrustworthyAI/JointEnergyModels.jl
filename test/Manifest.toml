@@ -2,7 +2,7 @@
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "0b3a42f74f14e5dbbc2dfc30fd3ece8a00290563"
+project_hash = "f6ebb05cf9c89ab9a995c32a3260224f8ede515e"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -637,9 +637,9 @@ version = "1.7.0"
 
 [[deps.MLJFlux]]
 deps = ["CategoricalArrays", "ColorTypes", "ComputationalResources", "Flux", "MLJModelInterface", "Metalhead", "Optimisers", "ProgressMeter", "Random", "Statistics", "Tables"]
-git-tree-sha1 = "98fd05da1bc1527f7849efb645ef1921ccf97c9a"
+git-tree-sha1 = "50c7f24b84005a2a80875c10d4f4059df17a0f68"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
-version = "0.6.0"
+version = "0.5.1"
 
 [[deps.MLJModelInterface]]
 deps = ["Random", "ScientificTypesBase", "StatisticalTraits"]

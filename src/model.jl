@@ -59,8 +59,11 @@ end
 Computes the generative loss.
 """
 function gen_loss(jem::JointEnergyModel, x, y)
+    # Training batch `x` and generated samples `xsample`:
     x, xsample = get_samples(jem, x)
     E(x) = energy(jem.sampler, jem.chain, x, onecold(y)[1])
+
+    # E(observed) - E(generated):
     ℓ = E(x) .- E(xsample)
     return ℓ
 end

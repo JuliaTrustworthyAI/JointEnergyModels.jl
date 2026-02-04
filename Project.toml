@@ -1,7 +1,7 @@
 name = "JointEnergyModels"
 uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
 authors = ["Patrick Altmeyer"]
-version = "0.1.7"
+version = "0.1.8"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -29,7 +29,7 @@ ChainRulesCore = "1.16"
 ComputationalResources = "0.3"
 Distributions = "0.25"
 EnergySamplers = "1.0.0"
-Flux = "0.13, 0.14"
+Flux = "0.13, 0.14, 0.15, 0.16"
 MLJFlux = "0.2, 0.3, 0.4, 0.5"
 MLJModelInterface = "1.8"
 MLUtils = "0.4"

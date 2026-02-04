@@ -1,0 +1,15 @@
+---
+engine: julia
+julia: 
+  exeflags: ["--project=../"]
+---
+
+```@meta
+CurrentModule = JointEnergyModels
+```
+
+# `JointEnergyModels.jl`
+
+Documentation for [JointEnergyModels.jl](https://github.com/juliatrustworthyai/JointEnergyModels.jl).
+
+{{< include _intro.qmd >}}

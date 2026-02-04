@@ -1,0 +1,2 @@
+# MNIST
+include("mnist.jl")

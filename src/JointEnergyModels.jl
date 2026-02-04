@@ -7,10 +7,6 @@ using TaijaBase
 using Reexport
 @reexport import EnergySamplers: ConditionalSampler, UnconditionalSampler, JointSampler
 
-include("utils.jl")
-export _energy
-
-
 include("model.jl")
 export JointEnergyModel
 export class_loss, gen_loss, loss

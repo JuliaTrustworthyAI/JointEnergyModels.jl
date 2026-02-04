@@ -29,7 +29,7 @@ function EnergySamplers.ConditionalSampler(
     𝒟y = Categorical(ones(n_classes) ./ n_classes)          # TODO: make more general
 
     # Input dimension:
-    input_size = size(X)[1:end-1]
+    input_size = size(X)[1:(end-1)]
 
     # Buffer:
     buffer = Float32.(rand(𝒟x, input_size..., maximum([1000, batch_size])))

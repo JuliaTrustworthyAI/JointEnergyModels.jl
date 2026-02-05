@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## Version [0.2.0] - 2026-02-05
 
 - Actually complying with new Flux and MLJFlux API now.
+- Bumped compat entries for Zygote and CategoricalArrays
 
 ## Version [0.1.9] - 2026-02-04
 

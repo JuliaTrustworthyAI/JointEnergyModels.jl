@@ -1,6 +1,6 @@
 name = "JointEnergyModels"
 uuid = "48c56d24-211d-4463-bbc0-7a701b291131"
-version = "0.1.9"
+version = "0.2.0"
 authors = ["Patrick Altmeyer"]
 
 [deps]

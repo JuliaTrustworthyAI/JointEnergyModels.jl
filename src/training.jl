@@ -3,7 +3,7 @@ using Flux: DataLoader
 using Flux.Losses: logitcrossentropy
 using ProgressMeter
 
-function accuracy(jem::JointEnergyModel, x, y; agg = mean)
+function accuracy(jem::JointEnergyModel, x, y; agg=mean)
     ŷ = jem(x)
     agg(onecold(ŷ) .== onecold(y))
 end
@@ -11,11 +11,11 @@ end
 function evaluation(
     jem::JointEnergyModel,
     val_set::Union{DataLoader,Base.Iterators.Zip};
-    class_loss_fun::Function = logitcrossentropy,
-    use_class_loss::Bool = true,
-    use_gen_loss::Bool = true,
-    use_reg_loss::Bool = true,
-    α = [1.0, 1.0, 1e-1],
+    class_loss_fun::Function=logitcrossentropy,
+    use_class_loss::Bool=true,
+    use_gen_loss::Bool=true,
+    use_reg_loss::Bool=true,
+    α=[1.0, 1.0, 1e-1],
 )
     ℓ = 0.0
     ℓ_clf = 0.0
@@ -24,18 +24,19 @@ function evaluation(
     acc = 0.0
     num = 0
     for (x, y) in val_set
-        ℓ_clf += sum(JointEnergyModels.class_loss(jem, x, y; loss_fun = class_loss_fun))
-        ℓ_gen += sum(JointEnergyModels.gen_loss(jem, x, y))
-        ℓ_reg += sum(JointEnergyModels.reg_loss(jem, x, y))
+        ℓ_clf += sum(JointEnergyModels.class_loss(jem.chain, jem, x, y; loss_fun=class_loss_fun))
+        ℓ_gen += sum(JointEnergyModels.gen_loss(jem.chain, jem, x, y))
+        ℓ_reg += sum(JointEnergyModels.reg_loss(jem.chain, jem, x, y))
         ℓ += JointEnergyModels.loss(
+            jem.chain,
             jem,
             x,
             y;
-            use_class_loss = use_class_loss,
-            use_gen_loss = use_gen_loss,
-            use_reg_loss = use_reg_loss,
-            class_loss_fun = class_loss_fun,
-            α = α,
+            use_class_loss=use_class_loss,
+            use_gen_loss=use_gen_loss,
+            use_reg_loss=use_reg_loss,
+            class_loss_fun=class_loss_fun,
+            α=α,
         )
         acc += accuracy(jem, x, y)
         num += size(x)[end]
@@ -47,27 +48,27 @@ function train_model(
     jem::JointEnergyModel,
     train_set,
     opt_state;
-    num_epochs::Int = 100,
-    val_set::Union{Nothing,DataLoader,Base.Iterators.Zip} = nothing,
-    max_patience::Int = 10,
-    verbosity::Int = num_epochs,
-    use_class_loss::Bool = true,
-    use_gen_loss::Bool = true,
-    use_reg_loss::Bool = true,
-    α = [1.0, 1.0, 1e-1],
-    class_loss_fun::Function = logitcrossentropy,
-    progress_meter::Union{Nothing,ProgressMeter.Progress} = nothing,
+    num_epochs::Int=100,
+    val_set::Union{Nothing,DataLoader,Base.Iterators.Zip}=nothing,
+    max_patience::Int=10,
+    verbosity::Int=num_epochs,
+    use_class_loss::Bool=true,
+    use_gen_loss::Bool=true,
+    use_reg_loss::Bool=true,
+    α=[1.0, 1.0, 1e-1],
+    class_loss_fun::Function=logitcrossentropy,
+    progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
 )
     training_log = []
     not_finite_counter = 0
     if isnothing(progress_meter)
         progress_meter = Progress(
             num_epochs,
-            dt = 0,
-            desc = "Optimising neural net:",
-            barglyphs = BarGlyphs("[=> ]"),
-            barlen = 25,
-            color = :green,
+            dt=0,
+            desc="Optimising neural net:",
+            barglyphs=BarGlyphs("[=> ]"),
+            barlen=25,
+            color=:green,
         )
         verbosity == 0 || next!(progress_meter)
     end
@@ -80,17 +81,24 @@ function train_model(
 
             # Forward pass:
             x, y = data
-            val, grads = Flux.withgradient(jem) do m
+
+            # Closure:
+            function lossfun(nn)
                 JointEnergyModels.loss(
-                    m,
+                    nn,
+                    jem,
                     x,
                     y;
-                    use_class_loss = use_class_loss,
-                    use_gen_loss = use_gen_loss,
-                    use_reg_loss = use_reg_loss,
-                    α = α,
-                    class_loss_fun = class_loss_fun,
+                    use_class_loss=use_class_loss,
+                    use_gen_loss=use_gen_loss,
+                    use_reg_loss=use_reg_loss,
+                    α=α,
+                    class_loss_fun=class_loss_fun,
                 )
+            end
+
+            val, grads = Flux.withgradient(jem.chain) do m
+                lossfun(m)
             end
 
             # Save the loss from the forward pass. (Done outside of gradient.)
@@ -101,7 +109,7 @@ function train_model(
                 continue
             end
 
-            Flux.update!(opt_state, jem, grads[1])
+            Flux.update!(opt_state, jem.chain, grads[1])
         end
 
         # Detect if loss has been Inf or NaN for 10 consecutive batches and break.
@@ -118,22 +126,22 @@ function train_model(
             ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(
                 jem,
                 val_set;
-                use_class_loss = use_class_loss,
-                use_gen_loss = use_gen_loss,
-                use_reg_loss = use_reg_loss,
-                class_loss_fun = class_loss_fun,
-                α = α,
+                use_class_loss=use_class_loss,
+                use_gen_loss=use_gen_loss,
+                use_reg_loss=use_reg_loss,
+                class_loss_fun=class_loss_fun,
+                α=α,
             )
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         else
             ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc = evaluation(
                 jem,
                 train_set;
-                use_class_loss = use_class_loss,
-                use_gen_loss = use_gen_loss,
-                use_reg_loss = use_reg_loss,
-                class_loss_fun = class_loss_fun,
-                α = α,
+                use_class_loss=use_class_loss,
+                use_gen_loss=use_gen_loss,
+                use_reg_loss=use_reg_loss,
+                class_loss_fun=class_loss_fun,
+                α=α,
             )
             push!(training_log, (; ℓ, ℓ_clf, ℓ_gen, ℓ_reg, acc, training_losses))
         end

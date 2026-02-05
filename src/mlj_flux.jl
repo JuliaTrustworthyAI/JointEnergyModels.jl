@@ -100,6 +100,8 @@ end
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
 # metadata)`, where `metadata` is anything extra needed by `predict`:
+MLJFlux.fitresult(model::JointEnergyClassifier, chain, y) = (chain, MMI.classes(y[1]))
+
 MLJFlux.fitresult(model::JointEnergyClassifier, chain, y, ordinal_mappings=nothing,
     embedding_matrices=nothing,) = (chain, MMI.classes(y[1]))
 

@@ -1,10 +1,10 @@
 𝒟x = Normal()
 𝒟y = Categorical(ones(2) ./ 2)
-sampler =
+smpler =
     ConditionalSampler(𝒟x, 𝒟y, input_size = size(Xmat)[1:(end-1)], batch_size = batch_size)
 
 clf = JointEnergyClassifier(
-    sampler;
+    smpler;
     builder = MLJFlux.MLP(hidden = (32, 32, 32), σ = Flux.relu),
     batch_size = batch_size,
     finaliser = x -> x,

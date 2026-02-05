@@ -7,7 +7,7 @@ setup_docs = quote
     using Distributions
     using Flux
     using Flux.Data: DataLoader
-    using Flux: onehotbatch, onecold, @functor, logsumexp
+    using Flux: onehotbatch, onecold, @layer, logsumexp
     using Flux.Losses: logitcrossentropy
     using Images
     using JointEnergyModels
